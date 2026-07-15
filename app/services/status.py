@@ -1,21 +1,34 @@
 import asyncio
 from datetime import UTC, datetime
 
-from app.clients.palworld import PalworldApiError, PalworldClient
+from app.clients.palworld import (
+    PalworldApiError,
+    PalworldClient,
+)
 from app.models import PlayerSummary, ServerStatus
+from app.services.infrastructure import InfrastructureService
 
 
 class StatusService:
-    def __init__(self, client: PalworldClient) -> None:
-        self._client = client
+    def __init__(
+        self,
+        palworld_client: PalworldClient,
+        infrastructure_service: InfrastructureService,
+    ) -> None:
+        self._palworld_client = palworld_client
+        self._infrastructure_service = infrastructure_service
 
     async def get_status(self) -> ServerStatus:
         checked_at = datetime.now(UTC)
 
+        infrastructure = (
+            self._infrastructure_service.get_metrics()
+        )
+
         try:
             info, metrics = await asyncio.gather(
-                self._client.get_info(),
-                self._client.get_metrics(),
+                self._palworld_client.get_info(),
+                self._palworld_client.get_metrics(),
             )
         except PalworldApiError:
             return ServerStatus(
@@ -25,6 +38,7 @@ class StatusService:
                     current=0,
                     maximum=0,
                 ),
+                infrastructure=infrastructure,
             )
 
         return ServerStatus(
@@ -33,12 +47,17 @@ class StatusService:
             name=info.get("servername"),
             version=info.get("version"),
             players=PlayerSummary(
-                current=int(metrics.get("currentplayernum", 0)),
-                maximum=int(metrics.get("maxplayernum", 0)),
+                current=int(
+                    metrics.get("currentplayernum", 0)
+                ),
+                maximum=int(
+                    metrics.get("maxplayernum", 0)
+                ),
             ),
             server_fps=metrics.get("serverfps"),
             frame_time_ms=metrics.get("serverframetime"),
             uptime_seconds=metrics.get("uptime"),
             world_day=metrics.get("days"),
             base_count=metrics.get("basecampnum"),
+            infrastructure=infrastructure,
         )

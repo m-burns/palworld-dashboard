@@ -8,6 +8,10 @@ class PlayerSummary(BaseModel):
     maximum: int
 
 
+class InfrastructureMetrics(BaseModel):
+    cpu_percent: float | None = None
+
+
 class ServerStatus(BaseModel):
     online: bool
     checked_at: datetime
@@ -19,3 +23,4 @@ class ServerStatus(BaseModel):
     uptime_seconds: int | None = None
     world_day: int | None = None
     base_count: int | None = None
+    infrastructure: InfrastructureMetrics | None = None
