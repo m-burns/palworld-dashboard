@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <title>{{ title }}</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/styles.css') }}"
+    >
+</head>
+
+<body>
+    <main class="dashboard">
+        <header class="hero">
+            <p class="eyebrow">PALWORLD COMMUNITY SERVER</p>
+            <h1>{{ title }}</h1>
+
+            <div class="status-line">
+                <span
+                    id="status-dot"
+                    class="status-dot status-loading"
+                ></span>
+
+                <span id="status-text">
+                    Checking server status…
+                </span>
+            </div>
+
+            <p id="last-checked" class="muted">
+                Waiting for first update
+            </p>
+        </header>
+
+        <section class="metric-grid">
+            <article class="metric-card">
+                <span class="metric-label">Players</span>
+                <strong id="player-count">—</strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">Server FPS</span>
+                <strong id="server-fps">—</strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">Frame time</span>
+                <strong id="frame-time">—</strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">Uptime</span>
+                <strong id="uptime">—</strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">World day</span>
+                <strong id="world-day">—</strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">Bases</span>
+                <strong id="base-count">—</strong>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div>
+                <p class="eyebrow">SERVER DETAILS</p>
+                <h2 id="server-name">Palworld Server</h2>
+            </div>
+
+            <dl class="detail-list">
+                <div>
+                    <dt>Version</dt>
+                    <dd id="server-version">—</dd>
+                </div>
+
+                <div>
+                    <dt>API status</dt>
+                    <dd id="api-state">Loading</dd>
+                </div>
+            </dl>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', path='/app.js') }}"></script>
+</body>
+</html>
