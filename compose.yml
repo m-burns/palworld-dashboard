@@ -9,8 +9,16 @@ services:
     env_file:
       - .env
 
+    environment:
+      PSUTIL_PROCFS_PATH: /host/proc
+
     ports:
       - "127.0.0.1:8000:8000"
+
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
 
     networks:
       - palworld-existing

@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 from app.clients.palworld import PalworldClient
 from app.config import get_settings
 from app.models import ServerStatus
+from app.services.infrastructure import InfrastructureService
 from app.services.status import StatusService
 
 
@@ -21,7 +22,12 @@ palworld_client = PalworldClient(
     password=settings.palworld_api_password,
 )
 
-status_service = StatusService(palworld_client)
+infrastructure_service = InfrastructureService()
+
+status_service = StatusService(
+    palworld_client=palworld_client,
+    infrastructure_service=infrastructure_service,
+)
 
 app = FastAPI(
     title="Palworld Dashboard",
@@ -52,7 +58,9 @@ async def home(request: Request) -> HTMLResponse:
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+    }
 
 
 @app.get(

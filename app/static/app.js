@@ -94,16 +94,28 @@ async function refreshDashboard() {
         document.querySelector("#base-count").textContent =
             data.base_count ?? "—";
 
+        const cpuPercent =
+            data.infrastructure?.cpu_percent;
+
+        document.querySelector("#cpu-percent").textContent =
+            cpuPercent === null || cpuPercent === undefined
+                ? "—"
+                : `${Number(cpuPercent).toFixed(1)}%`;
+
         lastChecked.textContent =
             `Last checked ${new Date(
                 data.checked_at,
             ).toLocaleString()}`;
     } catch (error) {
         setServerState(false);
+
         lastChecked.textContent =
             "Dashboard could not contact the API";
 
-        console.error("Dashboard refresh failed", error);
+        console.error(
+            "Dashboard refresh failed",
+            error,
+        );
     }
 }
 
