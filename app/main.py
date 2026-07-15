@@ -58,9 +58,7 @@ async def home(request: Request) -> HTMLResponse:
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {
-        "status": "ok",
-    }
+    return {"status": "ok"}
 
 
 @app.get(
