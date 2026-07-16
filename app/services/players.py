@@ -1,25 +1,32 @@
 from datetime import UTC, datetime
 from typing import Any
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.clients.palworld import (
     PalworldApiError,
     PalworldClient,
 )
 from app.models import (
+    PlayerHistoryResponse,
     PlayerListResponse,
     PublicPlayer,
 )
+from app.repositories.players import PlayerRepository
 
 
 class PlayerService:
     def __init__(
         self,
         palworld_client: PalworldClient,
+        player_repository: PlayerRepository,
     ) -> None:
         self._palworld_client = palworld_client
+        self._player_repository = player_repository
 
     async def get_online_players(
         self,
+        session: AsyncSession,
     ) -> PlayerListResponse:
         checked_at = datetime.now(UTC)
 
@@ -49,9 +56,28 @@ class PlayerService:
             )
         )
 
+        await self._player_repository.upsert_online_players(
+            session=session,
+            players=players,
+        )
+
         return PlayerListResponse(
             checked_at=checked_at,
             available=True,
+            players=players,
+        )
+
+    async def get_player_history(
+        self,
+        session: AsyncSession,
+    ) -> PlayerHistoryResponse:
+        players = (
+            await self._player_repository.list_known_players(
+                session=session,
+            )
+        )
+
+        return PlayerHistoryResponse(
             players=players,
         )
 

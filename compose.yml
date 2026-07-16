@@ -23,6 +23,7 @@ services:
       - /sys:/host/sys:ro
       - /:/host/root:ro
       - /opt/palworld/palworld/backups:/palworld-backups:ro
+      - ./data:/app/data
 
     networks:
       - palworld-existing

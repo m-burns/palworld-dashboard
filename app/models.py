@@ -61,3 +61,14 @@ class ServerStatus(BaseModel):
 
     infrastructure: InfrastructureMetrics | None = None
     latest_backup: BackupStatus | None = None
+
+class HistoricalPlayer(BaseModel):
+    name: str
+    latest_level: int | None = None
+    highest_level: int | None = None
+    first_seen_at: datetime
+    last_seen_at: datetime
+
+
+class PlayerHistoryResponse(BaseModel):
+    players: list[HistoricalPlayer]
