@@ -2,21 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1"
     >
+
     <title>{{ title }}</title>
+
     <link
         rel="stylesheet"
-        href="{{ url_for('static', path='/styles.css') }}"
+        href="/static/styles.css"
     >
 </head>
 
 <body>
     <main class="dashboard">
         <header class="hero">
-            <p class="eyebrow">PALWORLD COMMUNITY SERVER</p>
+            <p class="eyebrow">
+                PALWORLD COMMUNITY SERVER
+            </p>
+
             <h1>{{ title }}</h1>
 
             <div class="status-line">
@@ -71,34 +77,63 @@
                 <strong id="cpu-percent">—</strong>
             </article>
 
-	    <article class="metric-card">
-    		<span class="metric-label">VPS RAM</span>
-    		<strong id="memory-percent">—</strong>
-    		<small id="memory-detail" class="metric-detail">—</small>
-	    </article>
-
-	    <article class="metric-card">
-    		<span class="metric-label">VPS Swap</span>
-    		<strong id="swap-percent">—</strong>
-    		<small id="swap-detail" class="metric-detail">—</small>
-	    </article>
-
-	    <article class="metric-card">
-    		<span class="metric-label">VPS Disk</span>
-    		<strong id="disk-percent">—</strong>
-    		<small id="disk-detail" class="metric-detail">—</small>
-	    </article>
             <article class="metric-card">
-    		<span class="metric-label">Latest Backup</span>
-    		<strong id="backup-state">—</strong>
-    		<small id="backup-detail" class="metric-detail">—</small>
-	    </article>
+                <span class="metric-label">VPS RAM</span>
+                <strong id="memory-percent">—</strong>
+                <small
+                    id="memory-detail"
+                    class="metric-detail"
+                >
+                    —
+                </small>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">VPS Swap</span>
+                <strong id="swap-percent">—</strong>
+                <small
+                    id="swap-detail"
+                    class="metric-detail"
+                >
+                    —
+                </small>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">VPS Disk</span>
+                <strong id="disk-percent">—</strong>
+                <small
+                    id="disk-detail"
+                    class="metric-detail"
+                >
+                    —
+                </small>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">
+                    Latest Backup
+                </span>
+
+                <strong id="backup-state">
+                    —
+                </strong>
+
+                <small
+                    id="backup-detail"
+                    class="metric-detail"
+                >
+                    —
+                </small>
+            </article>
         </section>
 
         <section class="panel">
             <div>
                 <p class="eyebrow">SERVER DETAILS</p>
-                <h2 id="server-name">Palworld Server</h2>
+                <h2 id="server-name">
+                    Palworld Server
+                </h2>
             </div>
 
             <dl class="detail-list">
@@ -113,8 +148,36 @@
                 </div>
             </dl>
         </section>
+
+        <section class="panel player-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">
+                        ONLINE PLAYERS
+                    </p>
+
+                    <h2>Current adventurers</h2>
+                </div>
+
+                <span
+                    id="online-player-total"
+                    class="player-total"
+                >
+                    —
+                </span>
+            </div>
+
+            <div
+                id="online-player-list"
+                class="player-list"
+            >
+                <p class="muted">
+                    Loading players…
+                </p>
+            </div>
+        </section>
     </main>
 
-    <script src="{{ url_for('static', path='/app.js') }}"></script>
+    <script src="/static/app.js"></script>
 </body>
 </html>

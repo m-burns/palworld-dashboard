@@ -7,9 +7,13 @@ from fastapi.templating import Jinja2Templates
 
 from app.clients.palworld import PalworldClient
 from app.config import get_settings
-from app.models import ServerStatus
+from app.models import (
+    PlayerListResponse,
+    ServerStatus,
+)
 from app.services.backups import BackupService
 from app.services.infrastructure import InfrastructureService
+from app.services.players import PlayerService
 from app.services.status import StatusService
 
 
@@ -36,9 +40,13 @@ status_service = StatusService(
     backup_service=backup_service,
 )
 
+player_service = PlayerService(
+    palworld_client=palworld_client,
+)
+
 app = FastAPI(
     title="Palworld Dashboard",
-    version="0.5.0",
+    version="0.6.0",
 )
 
 app.mount(
@@ -76,3 +84,11 @@ async def health() -> dict[str, str]:
 )
 async def server_status() -> ServerStatus:
     return await status_service.get_status()
+
+
+@app.get(
+    "/api/players",
+    response_model=PlayerListResponse,
+)
+async def online_players() -> PlayerListResponse:
+    return await player_service.get_online_players()

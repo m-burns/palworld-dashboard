@@ -8,6 +8,17 @@ class PlayerSummary(BaseModel):
     maximum: int
 
 
+class PublicPlayer(BaseModel):
+    name: str
+    level: int | None = None
+
+
+class PlayerListResponse(BaseModel):
+    checked_at: datetime
+    available: bool
+    players: list[PublicPlayer]
+
+
 class InfrastructureMetrics(BaseModel):
     cpu_percent: float | None = None
 
