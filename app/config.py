@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     backup_directory: str = "/palworld-backups"
     backup_max_age_hours: int = 36
 
+    database_url: str = "sqlite+aiosqlite:////app/data/dashboard.db"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
