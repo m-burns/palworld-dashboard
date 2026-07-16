@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>{{ title }}</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/styles.css"
+    >
+</head>
+
+<body>
+    <main
+        class="dashboard profile-page"
+        data-player-key="{{ player_key }}"
+    >
+        <nav class="profile-navigation">
+            <a href="/" class="back-link">
+                ← Back to dashboard
+            </a>
+        </nav>
+
+        <header class="hero profile-hero">
+            <p class="eyebrow">PLAYER PROFILE</p>
+
+            <h1 id="profile-name">
+                Loading player…
+            </h1>
+
+            <div class="status-line">
+                <span
+                    id="profile-status-dot"
+                    class="status-dot status-loading"
+                ></span>
+
+                <span id="profile-status">
+                    Loading status…
+                </span>
+            </div>
+        </header>
+
+        <section class="metric-grid">
+            <article class="metric-card">
+                <span class="metric-label">
+                    Highest level
+                </span>
+
+                <strong id="profile-highest-level">
+                    —
+                </strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">
+                    Latest level
+                </span>
+
+                <strong id="profile-latest-level">
+                    —
+                </strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">
+                    Total playtime
+                </span>
+
+                <strong id="profile-total-playtime">
+                    —
+                </strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">
+                    Sessions
+                </span>
+
+                <strong id="profile-session-count">
+                    —
+                </strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">
+                    Longest session
+                </span>
+
+                <strong id="profile-longest-session">
+                    —
+                </strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">
+                    Average session
+                </span>
+
+                <strong id="profile-average-session">
+                    —
+                </strong>
+            </article>
+        </section>
+
+        <section class="panel profile-details-panel">
+            <div>
+                <p class="eyebrow">
+                    PLAYER HISTORY
+                </p>
+
+                <h2>Activity</h2>
+            </div>
+
+            <dl class="detail-list">
+                <div>
+                    <dt>First seen</dt>
+                    <dd id="profile-first-seen">—</dd>
+                </div>
+
+                <div>
+                    <dt>Last seen</dt>
+                    <dd id="profile-last-seen">—</dd>
+                </div>
+
+                <div>
+                    <dt>Completed sessions</dt>
+                    <dd id="profile-completed-sessions">—</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section
+            id="profile-error"
+            class="panel profile-error"
+            hidden
+        >
+            <div>
+                <p class="eyebrow">ERROR</p>
+                <h2>Player unavailable</h2>
+                <p class="muted">
+                    This player profile could not be loaded.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/player.js"></script>
+</body>
+</html>

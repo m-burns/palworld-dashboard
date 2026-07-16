@@ -247,9 +247,7 @@ function renderPlayers(payload) {
 
     for (const player of payload.players) {
         const card =
-            document.createElement(
-                "article",
-            );
+            document.createElement("article");
 
         card.className =
             "player-card";
@@ -258,17 +256,23 @@ function renderPlayers(payload) {
             document.createElement("div");
 
         const name =
-            document.createElement(
-                "strong",
-            );
+            document.createElement("a");
+
+        name.className =
+            "player-profile-link";
+
+        name.href =
+            `/players/${encodeURIComponent(
+                player.name
+                    .trim()
+                    .toLowerCase(),
+            )}`;
 
         name.textContent =
             player.name;
 
         const state =
-            document.createElement(
-                "span",
-            );
+            document.createElement("span");
 
         state.className =
             "player-online-state";
@@ -282,9 +286,7 @@ function renderPlayers(payload) {
         );
 
         const level =
-            document.createElement(
-                "span",
-            );
+            document.createElement("span");
 
         level.className =
             "player-level";
@@ -315,6 +317,7 @@ function renderLevelLeaderboard(payload) {
             document.createElement("p");
 
         message.className = "muted";
+
         message.textContent =
             "No player levels have been recorded yet.";
 
@@ -326,13 +329,17 @@ function renderLevelLeaderboard(payload) {
         const row =
             document.createElement("article");
 
-        row.className = "leaderboard-row";
+        row.className =
+            "leaderboard-row";
 
         const rank =
             document.createElement("span");
 
-        rank.className = "leaderboard-rank";
-        rank.textContent = `#${player.rank}`;
+        rank.className =
+            "leaderboard-rank";
+
+        rank.textContent =
+            `#${player.rank}`;
 
         const identity =
             document.createElement("div");
@@ -341,9 +348,20 @@ function renderLevelLeaderboard(payload) {
             "leaderboard-identity";
 
         const name =
-            document.createElement("strong");
+            document.createElement("a");
 
-        name.textContent = player.name;
+        name.className =
+            "player-profile-link";
+
+        name.href =
+            `/players/${encodeURIComponent(
+                player.name
+                    .trim()
+                    .toLowerCase(),
+            )}`;
+
+        name.textContent =
+            player.name;
 
         const lastSeen =
             document.createElement("span");
@@ -364,7 +382,8 @@ function renderLevelLeaderboard(payload) {
         const level =
             document.createElement("span");
 
-        level.className = "leaderboard-level";
+        level.className =
+            "leaderboard-level";
 
         level.textContent =
             player.highest_level === null
@@ -667,8 +686,11 @@ function renderPlaytimeLeaderboard(payload) {
     list.replaceChildren();
 
     if (!payload.players?.length) {
-        const message = document.createElement("p");
+        const message =
+            document.createElement("p");
+
         message.className = "muted";
+
         message.textContent =
             "No playtime has been tracked yet.";
 
@@ -677,34 +699,82 @@ function renderPlaytimeLeaderboard(payload) {
     }
 
     for (const player of payload.players) {
-        const row = document.createElement("article");
-        row.className = "leaderboard-row";
+        const row =
+            document.createElement("article");
 
-        const rank = document.createElement("span");
-        rank.className = "leaderboard-rank";
-        rank.textContent = `#${player.rank}`;
+        row.className =
+            "leaderboard-row";
 
-        const identity = document.createElement("div");
-        identity.className = "leaderboard-identity";
+        const rank =
+            document.createElement("span");
 
-        const name = document.createElement("strong");
-        name.textContent = player.name;
+        rank.className =
+            "leaderboard-rank";
 
-        const detail = document.createElement("span");
-        detail.className = "leaderboard-last-seen";
+        rank.textContent =
+            `#${player.rank}`;
+
+        const identity =
+            document.createElement("div");
+
+        identity.className =
+            "leaderboard-identity";
+
+        const name =
+            document.createElement("a");
+
+        name.className =
+            "player-profile-link";
+
+        name.href =
+            `/players/${encodeURIComponent(
+                player.name
+                    .trim()
+                    .toLowerCase(),
+            )}`;
+
+        name.textContent =
+            player.name;
+
+        const detail =
+            document.createElement("span");
+
+        detail.className =
+            "leaderboard-last-seen";
+
         detail.textContent =
-            `${player.session_count} session` +
-            `${player.session_count === 1 ? "" : "s"}` +
-            `${player.currently_online ? " · Online" : ""}`;
+            `${player.session_count} session${
+                player.session_count === 1
+                    ? ""
+                    : "s"
+            }${
+                player.currently_online
+                    ? " · Online"
+                    : ""
+            }`;
 
-        identity.append(name, detail);
+        identity.append(
+            name,
+            detail,
+        );
 
-        const time = document.createElement("span");
-        time.className = "leaderboard-level";
+        const time =
+            document.createElement("span");
+
+        time.className =
+            "leaderboard-level";
+
         time.textContent =
-            formatPlaytime(player.total_seconds);
+            formatPlaytime(
+                player.total_seconds,
+            );
 
-        row.append(rank, identity, time);
+        row.append(
+            rank,
+            identity,
+            time,
+        );
+
         list.appendChild(row);
     }
 }
