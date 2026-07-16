@@ -303,6 +303,84 @@ function renderPlayers(payload) {
     }
 }
 
+function renderLevelLeaderboard(payload) {
+    const list = document.querySelector(
+        "#level-leaderboard",
+    );
+
+    list.replaceChildren();
+
+    if (!payload.players?.length) {
+        const message =
+            document.createElement("p");
+
+        message.className = "muted";
+        message.textContent =
+            "No player levels have been recorded yet.";
+
+        list.appendChild(message);
+        return;
+    }
+
+    for (const player of payload.players) {
+        const row =
+            document.createElement("article");
+
+        row.className = "leaderboard-row";
+
+        const rank =
+            document.createElement("span");
+
+        rank.className = "leaderboard-rank";
+        rank.textContent = `#${player.rank}`;
+
+        const identity =
+            document.createElement("div");
+
+        identity.className =
+            "leaderboard-identity";
+
+        const name =
+            document.createElement("strong");
+
+        name.textContent = player.name;
+
+        const lastSeen =
+            document.createElement("span");
+
+        lastSeen.className =
+            "leaderboard-last-seen";
+
+        lastSeen.textContent =
+            `Last seen ${new Date(
+                player.last_seen_at,
+            ).toLocaleString()}`;
+
+        identity.append(
+            name,
+            lastSeen,
+        );
+
+        const level =
+            document.createElement("span");
+
+        level.className = "leaderboard-level";
+
+        level.textContent =
+            player.highest_level === null
+                ? "Unknown"
+                : `Level ${player.highest_level}`;
+
+        row.append(
+            rank,
+            identity,
+            level,
+        );
+
+        list.appendChild(row);
+    }
+}
+
 async function refreshStatus() {
     const lastChecked =
         document.querySelector(
@@ -517,9 +595,54 @@ async function refreshPlayers() {
     }
 }
 
+async function refreshLevelLeaderboard() {
+    try {
+        const response = await fetch(
+            "/api/leaderboards/levels?limit=10",
+            {
+                headers: {
+                    Accept: "application/json",
+                },
+                cache: "no-store",
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`,
+            );
+        }
+
+        renderLevelLeaderboard(
+            await response.json(),
+        );
+    } catch (error) {
+        const list = document.querySelector(
+            "#level-leaderboard",
+        );
+
+        list.replaceChildren();
+
+        const message =
+            document.createElement("p");
+
+        message.className = "muted";
+        message.textContent =
+            "Leaderboard is temporarily unavailable.";
+
+        list.appendChild(message);
+
+        console.error(
+            "Leaderboard refresh failed",
+            error,
+        );
+    }
+}
+
 function refreshDashboard() {
     refreshStatus();
     refreshPlayers();
+    refreshLevelLeaderboard();
 }
 
 refreshDashboard();

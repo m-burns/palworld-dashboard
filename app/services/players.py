@@ -14,6 +14,13 @@ from app.models import (
 )
 from app.repositories.players import PlayerRepository
 
+from app.models import (
+    LevelLeaderboardResponse,
+    PlayerHistoryResponse,
+    PlayerListResponse,
+    PublicPlayer,
+)
+
 
 class PlayerService:
     def __init__(
@@ -78,6 +85,23 @@ class PlayerService:
         )
 
         return PlayerHistoryResponse(
+            players=players,
+        )
+    
+    async def get_level_leaderboard(
+        self,
+        session: AsyncSession,
+        limit: int = 10,
+    ) -> LevelLeaderboardResponse:
+        players = (
+            await self._player_repository.get_level_leaderboard(
+                session=session,
+                limit=limit,
+            )
+        )
+
+        return LevelLeaderboardResponse(
+            generated_at=datetime.now(UTC),
             players=players,
         )
 

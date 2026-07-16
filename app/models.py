@@ -72,3 +72,15 @@ class HistoricalPlayer(BaseModel):
 
 class PlayerHistoryResponse(BaseModel):
     players: list[HistoricalPlayer]
+
+class LevelLeaderboardEntry(BaseModel):
+    rank: int
+    name: str
+    highest_level: int | None = None
+    latest_level: int | None = None
+    last_seen_at: datetime
+
+
+class LevelLeaderboardResponse(BaseModel):
+    generated_at: datetime
+    players: list[LevelLeaderboardEntry]

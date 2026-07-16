@@ -5,6 +5,7 @@ from fastapi import (
     Depends,
     FastAPI,
     Request,
+    Query,
 )
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +19,7 @@ from app.database.session import (
     get_session,
 )
 from app.models import (
+    LevelLeaderboardResponse,
     PlayerHistoryResponse,
     PlayerListResponse,
     ServerStatus,
@@ -132,4 +134,21 @@ async def player_history(
 ) -> PlayerHistoryResponse:
     return await player_service.get_player_history(
         session=session,
+    )
+
+@app.get(
+    "/api/leaderboards/levels",
+    response_model=LevelLeaderboardResponse,
+)
+async def level_leaderboard(
+    limit: int = Query(
+        default=10,
+        ge=1,
+        le=100,
+    ),
+    session: AsyncSession = Depends(get_session),
+) -> LevelLeaderboardResponse:
+    return await player_service.get_level_leaderboard(
+        session=session,
+        limit=limit,
     )
