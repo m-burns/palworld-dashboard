@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     palworld_api_username: str
     palworld_api_password: str
 
+    backup_directory: str = "/palworld-backups"
+    backup_max_age_hours: int = 36
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

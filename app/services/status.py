@@ -6,6 +6,7 @@ from app.clients.palworld import (
     PalworldClient,
 )
 from app.models import PlayerSummary, ServerStatus
+from app.services.backups import BackupService
 from app.services.infrastructure import InfrastructureService
 
 
@@ -14,15 +15,21 @@ class StatusService:
         self,
         palworld_client: PalworldClient,
         infrastructure_service: InfrastructureService,
+        backup_service: BackupService,
     ) -> None:
         self._palworld_client = palworld_client
         self._infrastructure_service = infrastructure_service
+        self._backup_service = backup_service
 
     async def get_status(self) -> ServerStatus:
         checked_at = datetime.now(UTC)
 
         infrastructure = (
             self._infrastructure_service.get_metrics()
+        )
+
+        latest_backup = (
+            self._backup_service.get_latest_backup()
         )
 
         try:
@@ -39,6 +46,7 @@ class StatusService:
                     maximum=0,
                 ),
                 infrastructure=infrastructure,
+                latest_backup=latest_backup,
             )
 
         return ServerStatus(
@@ -60,4 +68,5 @@ class StatusService:
             world_day=metrics.get("days"),
             base_count=metrics.get("basecampnum"),
             infrastructure=infrastructure,
+            latest_backup=latest_backup,
         )

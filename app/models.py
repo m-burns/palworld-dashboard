@@ -24,6 +24,15 @@ class InfrastructureMetrics(BaseModel):
     disk_total_bytes: int | None = None
 
 
+class BackupStatus(BaseModel):
+    exists: bool
+    healthy: bool
+
+    created_at: datetime | None = None
+    age_seconds: int | None = None
+    size_bytes: int | None = None
+
+
 class ServerStatus(BaseModel):
     online: bool
     checked_at: datetime
@@ -40,3 +49,4 @@ class ServerStatus(BaseModel):
     base_count: int | None = None
 
     infrastructure: InfrastructureMetrics | None = None
+    latest_backup: BackupStatus | None = None

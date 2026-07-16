@@ -12,6 +12,8 @@ services:
     environment:
       PSUTIL_PROCFS_PATH: /host/proc
       HOST_ROOT_PATH: /host/root
+      BACKUP_DIRECTORY: /palworld-backups
+      BACKUP_MAX_AGE_HOURS: 36
 
     ports:
       - "127.0.0.1:8000:8000"
@@ -20,6 +22,7 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/host/root:ro
+      - /opt/palworld/palworld/backups:/palworld-backups:ro
 
     networks:
       - palworld-existing
