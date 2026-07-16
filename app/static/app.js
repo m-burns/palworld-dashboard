@@ -28,6 +28,32 @@ function formatFrameTime(value) {
     return `${Number(value).toFixed(2)} ms`;
 }
 
+function formatBytes(bytes) {
+    if (bytes === null || bytes === undefined) {
+        return "—";
+    }
+
+    const units = ["B", "KB", "MB", "GB", "TB"];
+
+    let value = Number(bytes);
+    let unit = 0;
+
+    while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit++;
+    }
+
+    return `${value.toFixed(unit >= 3 ? 1 : 0)} ${units[unit]}`;
+}
+
+function formatPercent(value) {
+    if (value === null || value === undefined) {
+        return "—";
+    }
+
+    return `${Number(value).toFixed(1)}%`;
+}
+
 function setServerState(online) {
     const statusDot = document.querySelector("#status-dot");
     const statusText = document.querySelector("#status-text");
@@ -57,7 +83,7 @@ async function refreshDashboard() {
     try {
         const response = await fetch("/api/status", {
             headers: {
-                "Accept": "application/json",
+                Accept: "application/json",
             },
             cache: "no-store",
         });
@@ -94,13 +120,48 @@ async function refreshDashboard() {
         document.querySelector("#base-count").textContent =
             data.base_count ?? "—";
 
-        const cpuPercent =
-            data.infrastructure?.cpu_percent;
+        // Infrastructure metrics
+
+        const infrastructure = data.infrastructure;
 
         document.querySelector("#cpu-percent").textContent =
-            cpuPercent === null || cpuPercent === undefined
-                ? "—"
-                : `${Number(cpuPercent).toFixed(1)}%`;
+            formatPercent(infrastructure?.cpu_percent);
+
+        document.querySelector("#memory-percent").textContent =
+            formatPercent(infrastructure?.memory_used_percent);
+
+        document.querySelector("#memory-detail").textContent =
+            infrastructure?.memory_total_bytes
+                ? `${formatBytes(
+                      infrastructure.memory_used_bytes
+                  )} / ${formatBytes(
+                      infrastructure.memory_total_bytes
+                  )}`
+                : "Unavailable";
+
+        document.querySelector("#swap-percent").textContent =
+            formatPercent(infrastructure?.swap_used_percent);
+
+        document.querySelector("#swap-detail").textContent =
+            infrastructure?.swap_total_bytes
+                ? `${formatBytes(
+                      infrastructure.swap_used_bytes
+                  )} / ${formatBytes(
+                      infrastructure.swap_total_bytes
+                  )}`
+                : "Not configured";
+
+        document.querySelector("#disk-percent").textContent =
+            formatPercent(infrastructure?.disk_used_percent);
+
+        document.querySelector("#disk-detail").textContent =
+            infrastructure?.disk_total_bytes
+                ? `${formatBytes(
+                      infrastructure.disk_used_bytes
+                  )} / ${formatBytes(
+                      infrastructure.disk_total_bytes
+                  )}`
+                : "Unavailable";
 
         lastChecked.textContent =
             `Last checked ${new Date(

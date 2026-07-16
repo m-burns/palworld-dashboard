@@ -11,6 +11,7 @@ services:
 
     environment:
       PSUTIL_PROCFS_PATH: /host/proc
+      HOST_ROOT_PATH: /host/root
 
     ports:
       - "127.0.0.1:8000:8000"
