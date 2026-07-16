@@ -11,16 +11,32 @@ class PlayerSummary(BaseModel):
 class InfrastructureMetrics(BaseModel):
     cpu_percent: float | None = None
 
+    memory_used_percent: float | None = None
+    memory_used_bytes: int | None = None
+    memory_total_bytes: int | None = None
+
+    swap_used_percent: float | None = None
+    swap_used_bytes: int | None = None
+    swap_total_bytes: int | None = None
+
+    disk_used_percent: float | None = None
+    disk_used_bytes: int | None = None
+    disk_total_bytes: int | None = None
+
 
 class ServerStatus(BaseModel):
     online: bool
     checked_at: datetime
+
     name: str | None = None
     version: str | None = None
+
     players: PlayerSummary
+
     server_fps: float | None = None
     frame_time_ms: float | None = None
     uptime_seconds: int | None = None
     world_day: int | None = None
     base_count: int | None = None
+
     infrastructure: InfrastructureMetrics | None = None
