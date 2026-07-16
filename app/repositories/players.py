@@ -6,6 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import PlayerRecord
 from app.models import HistoricalPlayer, PublicPlayer
 
+from app.models import (
+    HistoricalPlayer,
+    LevelLeaderboardEntry,
+    PublicPlayer,
+)
+
 
 class PlayerRepository:
     async def upsert_online_players(
@@ -77,6 +83,38 @@ class PlayerRepository:
             )
             for record in records
         ]
+    
+    async def get_level_leaderboard(
+        self,
+        session: AsyncSession,
+        limit: int = 10,
+    ) -> list[LevelLeaderboardEntry]:
+        result = await session.execute(
+            select(PlayerRecord)
+            .where(PlayerRecord.highest_level.is_not(None))
+            .order_by(
+                PlayerRecord.highest_level.desc(),
+                PlayerRecord.display_name.asc(),
+            )
+            .limit(limit)
+        )
+
+        records = result.scalars().all()
+
+        return [
+            LevelLeaderboardEntry(
+                rank=index,
+                name=record.display_name,
+                highest_level=record.highest_level,
+                latest_level=record.latest_level,
+                last_seen_at=record.last_seen_at,
+            )
+            for index, record in enumerate(
+                records,
+                start=1,
+            )
+        ]
+    
 
     @staticmethod
     def _normalise_player_key(name: str) -> str:

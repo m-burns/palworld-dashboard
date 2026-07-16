@@ -296,3 +296,65 @@ dd {
         flex-direction: column;
     }
 }
+
+.leaderboard-panel {
+    display: block;
+}
+
+.leaderboard-badge {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(250, 204, 21, 0.12);
+    color: #facc15;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.leaderboard-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.leaderboard-row {
+    display: grid;
+    grid-template-columns: 54px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 15px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.leaderboard-rank {
+    color: #facc15;
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+
+.leaderboard-identity strong,
+.leaderboard-identity span {
+    display: block;
+}
+
+.leaderboard-last-seen {
+    margin-top: 4px;
+    color: #94a3b8;
+    font-size: 0.76rem;
+}
+
+.leaderboard-level {
+    color: #eef2ff;
+    font-weight: 800;
+}
+
+@media (max-width: 600px) {
+    .leaderboard-row {
+        grid-template-columns: 44px 1fr;
+    }
+
+    .leaderboard-level {
+        grid-column: 2;
+    }
+}
