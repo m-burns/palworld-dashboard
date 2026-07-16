@@ -1,13 +1,24 @@
 const REFRESH_INTERVAL_MS = 15_000;
 
 function formatUptime(totalSeconds) {
-    if (totalSeconds === null || totalSeconds === undefined) {
+    if (
+        totalSeconds === null ||
+        totalSeconds === undefined
+    ) {
         return "—";
     }
 
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const days = Math.floor(
+        totalSeconds / 86400,
+    );
+
+    const hours = Math.floor(
+        (totalSeconds % 86400) / 3600,
+    );
+
+    const minutes = Math.floor(
+        (totalSeconds % 3600) / 60,
+    );
 
     if (days > 0) {
         return `${days}d ${hours}h`;
@@ -21,13 +32,24 @@ function formatUptime(totalSeconds) {
 }
 
 function formatDuration(totalSeconds) {
-    if (totalSeconds === null || totalSeconds === undefined) {
+    if (
+        totalSeconds === null ||
+        totalSeconds === undefined
+    ) {
         return "Unknown age";
     }
 
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const days = Math.floor(
+        totalSeconds / 86400,
+    );
+
+    const hours = Math.floor(
+        (totalSeconds % 86400) / 3600,
+    );
+
+    const minutes = Math.floor(
+        (totalSeconds % 3600) / 60,
+    );
 
     if (days > 0) {
         return `${days}d ${hours}h ago`;
@@ -41,7 +63,10 @@ function formatDuration(totalSeconds) {
 }
 
 function formatFrameTime(value) {
-    if (value === null || value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return "—";
     }
 
@@ -49,25 +74,42 @@ function formatFrameTime(value) {
 }
 
 function formatBytes(bytes) {
-    if (bytes === null || bytes === undefined) {
+    if (
+        bytes === null ||
+        bytes === undefined
+    ) {
         return "—";
     }
 
-    const units = ["B", "KB", "MB", "GB", "TB"];
+    const units = [
+        "B",
+        "KB",
+        "MB",
+        "GB",
+        "TB",
+    ];
 
     let value = Number(bytes);
     let unit = 0;
 
-    while (value >= 1024 && unit < units.length - 1) {
+    while (
+        value >= 1024 &&
+        unit < units.length - 1
+    ) {
         value /= 1024;
         unit += 1;
     }
 
-    return `${value.toFixed(unit >= 3 ? 1 : 0)} ${units[unit]}`;
+    const decimals = unit >= 3 ? 1 : 0;
+
+    return `${value.toFixed(decimals)} ${units[unit]}`;
 }
 
 function formatPercent(value) {
-    if (value === null || value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return "—";
     }
 
@@ -75,9 +117,14 @@ function formatPercent(value) {
 }
 
 function setServerState(online) {
-    const statusDot = document.querySelector("#status-dot");
-    const statusText = document.querySelector("#status-text");
-    const apiState = document.querySelector("#api-state");
+    const statusDot =
+        document.querySelector("#status-dot");
+
+    const statusText =
+        document.querySelector("#status-text");
+
+    const apiState =
+        document.querySelector("#api-state");
 
     statusDot.classList.remove(
         "status-loading",
@@ -86,20 +133,36 @@ function setServerState(online) {
     );
 
     if (online) {
-        statusDot.classList.add("status-online");
-        statusText.textContent = "Server online";
-        apiState.textContent = "Connected";
+        statusDot.classList.add(
+            "status-online",
+        );
+
+        statusText.textContent =
+            "Server online";
+
+        apiState.textContent =
+            "Connected";
+
         return;
     }
 
-    statusDot.classList.add("status-offline");
-    statusText.textContent = "Server unavailable";
-    apiState.textContent = "Disconnected";
+    statusDot.classList.add(
+        "status-offline",
+    );
+
+    statusText.textContent =
+        "Server unavailable";
+
+    apiState.textContent =
+        "Disconnected";
 }
 
 function updateBackupStatus(backup) {
-    const state = document.querySelector("#backup-state");
-    const detail = document.querySelector("#backup-detail");
+    const state =
+        document.querySelector("#backup-state");
+
+    const detail =
+        document.querySelector("#backup-detail");
 
     state.classList.remove(
         "backup-healthy",
@@ -108,8 +171,14 @@ function updateBackupStatus(backup) {
 
     if (!backup?.exists) {
         state.textContent = "Missing";
-        state.classList.add("backup-warning");
-        detail.textContent = "No backup found";
+
+        state.classList.add(
+            "backup-warning",
+        );
+
+        detail.textContent =
+            "No backup found";
+
         return;
     }
 
@@ -124,95 +193,276 @@ function updateBackupStatus(backup) {
     );
 
     detail.textContent =
-        `${formatDuration(backup.age_seconds)} · ` +
-        `${formatBytes(backup.size_bytes)}`;
+        `${formatDuration(
+            backup.age_seconds,
+        )} · ${formatBytes(
+            backup.size_bytes,
+        )}`;
 }
 
-async function refreshDashboard() {
-    const lastChecked = document.querySelector("#last-checked");
+function renderPlayers(payload) {
+    const list =
+        document.querySelector(
+            "#online-player-list",
+        );
+
+    const total =
+        document.querySelector(
+            "#online-player-total",
+        );
+
+    list.replaceChildren();
+
+    if (!payload.available) {
+        total.textContent =
+            "Unavailable";
+
+        const message =
+            document.createElement("p");
+
+        message.className = "muted";
+
+        message.textContent =
+            "Player information is temporarily unavailable.";
+
+        list.appendChild(message);
+        return;
+    }
+
+    total.textContent =
+        String(payload.players.length);
+
+    if (payload.players.length === 0) {
+        const message =
+            document.createElement("p");
+
+        message.className = "muted";
+
+        message.textContent =
+            "Nobody is online.";
+
+        list.appendChild(message);
+        return;
+    }
+
+    for (const player of payload.players) {
+        const card =
+            document.createElement(
+                "article",
+            );
+
+        card.className =
+            "player-card";
+
+        const identity =
+            document.createElement("div");
+
+        const name =
+            document.createElement(
+                "strong",
+            );
+
+        name.textContent =
+            player.name;
+
+        const state =
+            document.createElement(
+                "span",
+            );
+
+        state.className =
+            "player-online-state";
+
+        state.textContent =
+            "Online";
+
+        identity.append(
+            name,
+            state,
+        );
+
+        const level =
+            document.createElement(
+                "span",
+            );
+
+        level.className =
+            "player-level";
+
+        level.textContent =
+            player.level === null
+                ? "Level unknown"
+                : `Level ${player.level}`;
+
+        card.append(
+            identity,
+            level,
+        );
+
+        list.appendChild(card);
+    }
+}
+
+async function refreshStatus() {
+    const lastChecked =
+        document.querySelector(
+            "#last-checked",
+        );
 
     try {
-        const response = await fetch("/api/status", {
-            headers: {
-                Accept: "application/json",
+        const response = await fetch(
+            "/api/status",
+            {
+                headers: {
+                    Accept:
+                        "application/json",
+                },
+                cache: "no-store",
             },
-            cache: "no-store",
-        });
+        );
 
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            throw new Error(
+                `HTTP ${response.status}`,
+            );
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
-        setServerState(data.online);
+        setServerState(
+            data.online,
+        );
 
-        document.querySelector("#server-name").textContent =
-            data.name ?? "Palworld Server";
+        document.querySelector(
+            "#server-name",
+        ).textContent =
+            data.name ??
+            "Palworld Server";
 
-        document.querySelector("#server-version").textContent =
-            data.version ?? "Unknown";
+        document.querySelector(
+            "#server-version",
+        ).textContent =
+            data.version ??
+            "Unknown";
 
-        document.querySelector("#player-count").textContent =
-            `${data.players.current} / ${data.players.maximum}`;
+        document.querySelector(
+            "#player-count",
+        ).textContent =
+            `${data.players.current} / ` +
+            `${data.players.maximum}`;
 
-        document.querySelector("#server-fps").textContent =
-            data.server_fps ?? "—";
+        document.querySelector(
+            "#server-fps",
+        ).textContent =
+            data.server_fps ??
+            "—";
 
-        document.querySelector("#frame-time").textContent =
-            formatFrameTime(data.frame_time_ms);
+        document.querySelector(
+            "#frame-time",
+        ).textContent =
+            formatFrameTime(
+                data.frame_time_ms,
+            );
 
-        document.querySelector("#uptime").textContent =
-            formatUptime(data.uptime_seconds);
+        document.querySelector(
+            "#uptime",
+        ).textContent =
+            formatUptime(
+                data.uptime_seconds,
+            );
 
-        document.querySelector("#world-day").textContent =
-            data.world_day ?? "—";
+        document.querySelector(
+            "#world-day",
+        ).textContent =
+            data.world_day ??
+            "—";
 
-        document.querySelector("#base-count").textContent =
-            data.base_count ?? "—";
+        document.querySelector(
+            "#base-count",
+        ).textContent =
+            data.base_count ??
+            "—";
 
-        const infrastructure = data.infrastructure;
+        const infrastructure =
+            data.infrastructure;
 
-        document.querySelector("#cpu-percent").textContent =
-            formatPercent(infrastructure?.cpu_percent);
+        document.querySelector(
+            "#cpu-percent",
+        ).textContent =
+            formatPercent(
+                infrastructure?.cpu_percent,
+            );
 
-        document.querySelector("#memory-percent").textContent =
-            formatPercent(infrastructure?.memory_used_percent);
+        document.querySelector(
+            "#memory-percent",
+        ).textContent =
+            formatPercent(
+                infrastructure
+                    ?.memory_used_percent,
+            );
 
-        document.querySelector("#memory-detail").textContent =
-            infrastructure?.memory_total_bytes
+        document.querySelector(
+            "#memory-detail",
+        ).textContent =
+            infrastructure
+                ?.memory_total_bytes
                 ? `${formatBytes(
-                      infrastructure.memory_used_bytes
-                  )} / ${formatBytes(
-                      infrastructure.memory_total_bytes
-                  )}`
+                    infrastructure
+                        .memory_used_bytes,
+                )} / ${formatBytes(
+                    infrastructure
+                        .memory_total_bytes,
+                )}`
                 : "Unavailable";
 
-        document.querySelector("#swap-percent").textContent =
-            formatPercent(infrastructure?.swap_used_percent);
+        document.querySelector(
+            "#swap-percent",
+        ).textContent =
+            formatPercent(
+                infrastructure
+                    ?.swap_used_percent,
+            );
 
-        document.querySelector("#swap-detail").textContent =
-            infrastructure?.swap_total_bytes
+        document.querySelector(
+            "#swap-detail",
+        ).textContent =
+            infrastructure
+                ?.swap_total_bytes
                 ? `${formatBytes(
-                      infrastructure.swap_used_bytes
-                  )} / ${formatBytes(
-                      infrastructure.swap_total_bytes
-                  )}`
+                    infrastructure
+                        .swap_used_bytes,
+                )} / ${formatBytes(
+                    infrastructure
+                        .swap_total_bytes,
+                )}`
                 : "Not configured";
 
-        document.querySelector("#disk-percent").textContent =
-            formatPercent(infrastructure?.disk_used_percent);
+        document.querySelector(
+            "#disk-percent",
+        ).textContent =
+            formatPercent(
+                infrastructure
+                    ?.disk_used_percent,
+            );
 
-        document.querySelector("#disk-detail").textContent =
-            infrastructure?.disk_total_bytes
+        document.querySelector(
+            "#disk-detail",
+        ).textContent =
+            infrastructure
+                ?.disk_total_bytes
                 ? `${formatBytes(
-                      infrastructure.disk_used_bytes
-                  )} / ${formatBytes(
-                      infrastructure.disk_total_bytes
-                  )}`
+                    infrastructure
+                        .disk_used_bytes,
+                )} / ${formatBytes(
+                    infrastructure
+                        .disk_total_bytes,
+                )}`
                 : "Unavailable";
 
-        updateBackupStatus(data.latest_backup);
+        updateBackupStatus(
+            data.latest_backup,
+        );
 
         lastChecked.textContent =
             `Last checked ${new Date(
@@ -229,6 +479,47 @@ async function refreshDashboard() {
             error,
         );
     }
+}
+
+async function refreshPlayers() {
+    try {
+        const response = await fetch(
+            "/api/players",
+            {
+                headers: {
+                    Accept:
+                        "application/json",
+                },
+                cache: "no-store",
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`,
+            );
+        }
+
+        const payload =
+            await response.json();
+
+        renderPlayers(payload);
+    } catch (error) {
+        renderPlayers({
+            available: false,
+            players: [],
+        });
+
+        console.error(
+            "Player refresh failed",
+            error,
+        );
+    }
+}
+
+function refreshDashboard() {
+    refreshStatus();
+    refreshPlayers();
 }
 
 refreshDashboard();

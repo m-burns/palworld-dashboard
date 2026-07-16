@@ -30,6 +30,7 @@ class PalworldClient:
                 )
                 response.raise_for_status()
                 return response.json()
+
         except (
             httpx.HTTPError,
             ValueError,
@@ -43,3 +44,6 @@ class PalworldClient:
 
     async def get_metrics(self) -> dict[str, Any]:
         return await self._get("/v1/api/metrics")
+
+    async def get_players(self) -> dict[str, Any]:
+        return await self._get("/v1/api/players")
