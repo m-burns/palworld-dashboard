@@ -97,3 +97,20 @@ class PlaytimeLeaderboardEntry(BaseModel):
 class PlaytimeLeaderboardResponse(BaseModel):
     generated_at: datetime
     players: list[PlaytimeLeaderboardEntry]
+
+class PlayerProfile(BaseModel):
+    player_key: str
+    name: str
+
+    latest_level: int | None = None
+    highest_level: int | None = None
+
+    first_seen_at: datetime
+    last_seen_at: datetime
+
+    currently_online: bool
+    total_playtime_seconds: int
+    session_count: int
+    completed_session_count: int
+    longest_session_seconds: int
+    average_session_seconds: int

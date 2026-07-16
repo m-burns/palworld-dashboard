@@ -7,8 +7,9 @@ from pathlib import Path
 from fastapi import (
     Depends,
     FastAPI,
-    Request,
+    HTTPException,
     Query,
+    Request,
 )
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,8 +27,9 @@ from app.models import (
     LevelLeaderboardResponse,
     PlayerHistoryResponse,
     PlayerListResponse,
-    ServerStatus,
+    PlayerProfile,
     PlaytimeLeaderboardResponse,
+    ServerStatus,
 )
 from app.repositories.players import PlayerRepository
 from app.services.backups import BackupService
@@ -201,4 +203,42 @@ async def playtime_leaderboard(
     return await player_service.get_playtime_leaderboard(
         session=session,
         limit=limit,
+    )
+
+@app.get(
+    "/api/players/{player_key}",
+    response_model=PlayerProfile,
+)
+async def player_profile(
+    player_key: str,
+    session: AsyncSession = Depends(get_session),
+) -> PlayerProfile:
+    profile = await player_service.get_player_profile(
+        session=session,
+        player_key=player_key,
+    )
+
+    if profile is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Player not found",
+        )
+
+    return profile
+
+@app.get(
+    "/players/{player_key}",
+    response_class=HTMLResponse,
+)
+async def player_profile_page(
+    request: Request,
+    player_key: str,
+) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request,
+        name="player.html",
+        context={
+            "title": "Player Profile",
+            "player_key": player_key,
+        },
     )

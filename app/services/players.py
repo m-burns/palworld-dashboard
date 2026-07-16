@@ -18,8 +18,9 @@ from app.models import (
     LevelLeaderboardResponse,
     PlayerHistoryResponse,
     PlayerListResponse,
-    PublicPlayer,
+    PlayerProfile,
     PlaytimeLeaderboardResponse,
+    PublicPlayer,
 )
 
 
@@ -121,6 +122,16 @@ class PlayerService:
         return PlaytimeLeaderboardResponse(
             generated_at=datetime.now(UTC),
             players=players,
+        )
+    
+    async def get_player_profile(
+        self,
+        session: AsyncSession,
+        player_key: str,
+    ) -> PlayerProfile | None:
+        return await self._player_repository.get_player_profile(
+            session=session,
+            player_key=player_key,
         )
 
     @staticmethod

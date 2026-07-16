@@ -10,6 +10,7 @@ from app.database.models import (
 from app.models import (
     HistoricalPlayer,
     LevelLeaderboardEntry,
+    PlayerProfile,
     PlaytimeLeaderboardEntry,
     PublicPlayer,
 )
@@ -258,6 +259,109 @@ class PlayerRepository:
                 0,
                 int((ended_at - started_at).total_seconds()),
             )
+            
+    async def get_player_profile(
+        self,
+        session: AsyncSession,
+        player_key: str,
+    ) -> PlayerProfile | None:
+        normalised_key = self._normalise_player_key(
+            player_key,
+        )
+
+        player_result = await session.execute(
+            select(PlayerRecord).where(
+                PlayerRecord.player_key == normalised_key
+            )
+        )
+
+        player = player_result.scalar_one_or_none()
+
+        if player is None:
+            return None
+
+        session_result = await session.execute(
+            select(PlayerSession)
+            .where(PlayerSession.player_id == player.id)
+            .order_by(PlayerSession.started_at.asc())
+        )
+
+        tracked_sessions = session_result.scalars().all()
+
+        now = datetime.now(UTC)
+
+        total_seconds = 0
+        completed_durations: list[int] = []
+        currently_online = False
+
+        for tracked_session in tracked_sessions:
+            if tracked_session.ended_at is None:
+                currently_online = True
+
+                started_at = self._as_utc(
+                    tracked_session.started_at,
+                )
+
+                total_seconds += max(
+                    0,
+                    int(
+                        (
+                            now - started_at
+                        ).total_seconds()
+                    ),
+                )
+
+                continue
+
+            duration = (
+                tracked_session.duration_seconds
+                or 0
+            )
+
+            duration = max(0, duration)
+
+            total_seconds += duration
+            completed_durations.append(duration)
+
+        longest_session_seconds = (
+            max(completed_durations)
+            if completed_durations
+            else 0
+        )
+
+        average_session_seconds = (
+            int(
+                sum(completed_durations)
+                / len(completed_durations)
+            )
+            if completed_durations
+            else 0
+        )
+
+        return PlayerProfile(
+            player_key=player.player_key,
+            name=player.display_name,
+            latest_level=player.latest_level,
+            highest_level=player.highest_level,
+            first_seen_at=self._as_utc(
+                player.first_seen_at,
+            ),
+            last_seen_at=self._as_utc(
+                player.last_seen_at,
+            ),
+            currently_online=currently_online,
+            total_playtime_seconds=total_seconds,
+            session_count=len(tracked_sessions),
+            completed_session_count=len(
+                completed_durations,
+            ),
+            longest_session_seconds=(
+                longest_session_seconds
+            ),
+            average_session_seconds=(
+                average_session_seconds
+            ),
+        )
 
     @staticmethod
     def _normalise_player_key(name: str) -> str:
