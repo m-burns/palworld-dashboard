@@ -48,3 +48,34 @@ class PlayerRecord(Base):
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
+
+class PlayerSession(Base):
+    __tablename__ = "player_sessions"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    player_id: Mapped[int] = mapped_column(
+        Integer,
+        index=True,
+        nullable=False,
+    )
+
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+
+    ended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    duration_seconds: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )

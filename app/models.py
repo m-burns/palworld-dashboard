@@ -84,3 +84,16 @@ class LevelLeaderboardEntry(BaseModel):
 class LevelLeaderboardResponse(BaseModel):
     generated_at: datetime
     players: list[LevelLeaderboardEntry]
+
+class PlaytimeLeaderboardEntry(BaseModel):
+    rank: int
+    name: str
+    total_seconds: int
+    session_count: int
+    currently_online: bool
+    last_seen_at: datetime
+
+
+class PlaytimeLeaderboardResponse(BaseModel):
+    generated_at: datetime
+    players: list[PlaytimeLeaderboardEntry]

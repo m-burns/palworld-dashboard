@@ -1,3 +1,6 @@
+import asyncio
+import logging
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -15,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.clients.palworld import PalworldClient
 from app.config import get_settings
 from app.database.session import (
+    SessionFactory,
     create_database_tables,
     get_session,
 )
@@ -23,6 +27,7 @@ from app.models import (
     PlayerHistoryResponse,
     PlayerListResponse,
     ServerStatus,
+    PlaytimeLeaderboardResponse,
 )
 from app.repositories.players import PlayerRepository
 from app.services.backups import BackupService
@@ -35,14 +40,42 @@ BASE_DIR = Path(__file__).resolve().parent
 
 settings = get_settings()
 
+logger = logging.getLogger(__name__)
+
+async def player_tracking_loop() -> None:
+    while True:
+        try:
+            async with SessionFactory() as session:
+                await player_service.get_online_players(
+                    session=session,
+                )
+        except Exception:
+            logger.exception(
+                "Background player tracking failed"
+            )
+
+        await asyncio.sleep(30)
+
 
 @asynccontextmanager
 async def lifespan(
     app: FastAPI,
 ):
     await create_database_tables()
-    yield
 
+    tracking_task = asyncio.create_task(
+        player_tracking_loop()
+    )
+
+    try:
+        yield
+    finally:
+        tracking_task.cancel()
+
+        try:
+            await tracking_task
+        except asyncio.CancelledError:
+            pass
 
 palworld_client = PalworldClient(
     base_url=settings.palworld_api_url,
@@ -149,6 +182,23 @@ async def level_leaderboard(
     session: AsyncSession = Depends(get_session),
 ) -> LevelLeaderboardResponse:
     return await player_service.get_level_leaderboard(
+        session=session,
+        limit=limit,
+    )
+
+@app.get(
+    "/api/leaderboards/playtime",
+    response_model=PlaytimeLeaderboardResponse,
+)
+async def playtime_leaderboard(
+    limit: int = Query(
+        default=10,
+        ge=1,
+        le=100,
+    ),
+    session: AsyncSession = Depends(get_session),
+) -> PlaytimeLeaderboardResponse:
+    return await player_service.get_playtime_leaderboard(
         session=session,
         limit=limit,
     )

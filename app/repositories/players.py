@@ -3,60 +3,74 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import PlayerRecord
-from app.models import HistoricalPlayer, PublicPlayer
-
+from app.database.models import (
+    PlayerRecord,
+    PlayerSession,
+)
 from app.models import (
     HistoricalPlayer,
     LevelLeaderboardEntry,
+    PlaytimeLeaderboardEntry,
     PublicPlayer,
 )
 
 
 class PlayerRepository:
-    async def upsert_online_players(
+    async def sync_online_players(
         self,
         session: AsyncSession,
         players: list[PublicPlayer],
     ) -> None:
         now = datetime.now(UTC)
+        online_keys: set[str] = set()
 
         for player in players:
             player_key = self._normalise_player_key(
                 player.name,
             )
+            online_keys.add(player_key)
 
-            result = await session.execute(
-                select(PlayerRecord).where(
-                    PlayerRecord.player_key == player_key,
-                )
+            record = await self._get_player_by_key(
+                session=session,
+                player_key=player_key,
             )
 
-            record = result.scalar_one_or_none()
-
             if record is None:
-                session.add(
-                    PlayerRecord(
-                        player_key=player_key,
-                        display_name=player.name,
-                        latest_level=player.level,
-                        highest_level=player.level,
-                        first_seen_at=now,
-                        last_seen_at=now,
-                    )
+                record = PlayerRecord(
+                    player_key=player_key,
+                    display_name=player.name,
+                    latest_level=player.level,
+                    highest_level=player.level,
+                    first_seen_at=now,
+                    last_seen_at=now,
                 )
-                continue
+                session.add(record)
+                await session.flush()
+            else:
+                record.display_name = player.name
+                record.latest_level = player.level
+                record.last_seen_at = now
 
-            record.display_name = player.name
-            record.latest_level = player.level
-            record.last_seen_at = now
-
-            if player.level is not None:
                 if (
-                    record.highest_level is None
-                    or player.level > record.highest_level
+                    player.level is not None
+                    and (
+                        record.highest_level is None
+                        or player.level > record.highest_level
+                    )
                 ):
                     record.highest_level = player.level
+
+            await self._ensure_open_session(
+                session=session,
+                player_id=record.id,
+                started_at=now,
+            )
+
+        await self._close_offline_sessions(
+            session=session,
+            online_keys=online_keys,
+            ended_at=now,
+        )
 
         await session.commit()
 
@@ -71,8 +85,6 @@ class PlayerRepository:
             )
         )
 
-        records = result.scalars().all()
-
         return [
             HistoricalPlayer(
                 name=record.display_name,
@@ -81,9 +93,9 @@ class PlayerRepository:
                 first_seen_at=record.first_seen_at,
                 last_seen_at=record.last_seen_at,
             )
-            for record in records
+            for record in result.scalars().all()
         ]
-    
+
     async def get_level_leaderboard(
         self,
         session: AsyncSession,
@@ -114,8 +126,146 @@ class PlayerRepository:
                 start=1,
             )
         ]
-    
+
+    async def get_playtime_leaderboard(
+        self,
+        session: AsyncSession,
+        limit: int = 10,
+    ) -> list[PlaytimeLeaderboardEntry]:
+        now = datetime.now(UTC)
+
+        player_result = await session.execute(
+            select(PlayerRecord)
+        )
+        players = player_result.scalars().all()
+
+        entries: list[PlaytimeLeaderboardEntry] = []
+
+        for player in players:
+            session_result = await session.execute(
+                select(PlayerSession).where(
+                    PlayerSession.player_id == player.id
+                )
+            )
+            tracked_sessions = session_result.scalars().all()
+
+            total_seconds = 0
+            currently_online = False
+
+            for tracked_session in tracked_sessions:
+                if tracked_session.ended_at is None:
+                    currently_online = True
+                    started_at = self._as_utc(
+                        tracked_session.started_at
+                    )
+                    total_seconds += max(
+                        0,
+                        int((now - started_at).total_seconds()),
+                    )
+                else:
+                    total_seconds += (
+                        tracked_session.duration_seconds or 0
+                    )
+
+            entries.append(
+                PlaytimeLeaderboardEntry(
+                    rank=0,
+                    name=player.display_name,
+                    total_seconds=total_seconds,
+                    session_count=len(tracked_sessions),
+                    currently_online=currently_online,
+                    last_seen_at=player.last_seen_at,
+                )
+            )
+
+        entries.sort(
+            key=lambda entry: (
+                -entry.total_seconds,
+                entry.name.casefold(),
+            )
+        )
+
+        limited_entries = entries[:limit]
+
+        return [
+            entry.model_copy(
+                update={"rank": index}
+            )
+            for index, entry in enumerate(
+                limited_entries,
+                start=1,
+            )
+        ]
+
+    async def _get_player_by_key(
+        self,
+        session: AsyncSession,
+        player_key: str,
+    ) -> PlayerRecord | None:
+        result = await session.execute(
+            select(PlayerRecord).where(
+                PlayerRecord.player_key == player_key
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def _ensure_open_session(
+        self,
+        session: AsyncSession,
+        player_id: int,
+        started_at: datetime,
+    ) -> None:
+        result = await session.execute(
+            select(PlayerSession).where(
+                PlayerSession.player_id == player_id,
+                PlayerSession.ended_at.is_(None),
+            )
+        )
+
+        if result.scalar_one_or_none() is None:
+            session.add(
+                PlayerSession(
+                    player_id=player_id,
+                    started_at=started_at,
+                )
+            )
+
+    async def _close_offline_sessions(
+        self,
+        session: AsyncSession,
+        online_keys: set[str],
+        ended_at: datetime,
+    ) -> None:
+        result = await session.execute(
+            select(PlayerSession, PlayerRecord)
+            .join(
+                PlayerRecord,
+                PlayerRecord.id == PlayerSession.player_id,
+            )
+            .where(PlayerSession.ended_at.is_(None))
+        )
+
+        for tracked_session, player in result.all():
+            if player.player_key in online_keys:
+                continue
+
+            started_at = self._as_utc(
+                tracked_session.started_at
+            )
+
+            tracked_session.ended_at = ended_at
+            tracked_session.duration_seconds = max(
+                0,
+                int((ended_at - started_at).total_seconds()),
+            )
 
     @staticmethod
     def _normalise_player_key(name: str) -> str:
         return name.strip().casefold()
+
+    @staticmethod
+    def _as_utc(value: datetime) -> datetime:
+        if value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+
+        return value.astimezone(UTC)

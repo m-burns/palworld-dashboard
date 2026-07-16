@@ -19,6 +19,7 @@ from app.models import (
     PlayerHistoryResponse,
     PlayerListResponse,
     PublicPlayer,
+    PlaytimeLeaderboardResponse,
 )
 
 
@@ -63,7 +64,7 @@ class PlayerService:
             )
         )
 
-        await self._player_repository.upsert_online_players(
+        await self._player_repository.sync_online_players(
             session=session,
             players=players,
         )
@@ -101,6 +102,23 @@ class PlayerService:
         )
 
         return LevelLeaderboardResponse(
+            generated_at=datetime.now(UTC),
+            players=players,
+        )
+
+    async def get_playtime_leaderboard(
+        self,
+        session: AsyncSession,
+        limit: int = 10,
+    ) -> PlaytimeLeaderboardResponse:
+        players = (
+            await self._player_repository.get_playtime_leaderboard(
+                session=session,
+                limit=limit,
+            )
+        )
+
+        return PlaytimeLeaderboardResponse(
             generated_at=datetime.now(UTC),
             players=players,
         )

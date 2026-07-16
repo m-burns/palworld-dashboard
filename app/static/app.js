@@ -639,10 +639,108 @@ async function refreshLevelLeaderboard() {
     }
 }
 
+function formatPlaytime(totalSeconds) {
+    if (totalSeconds === null || totalSeconds === undefined) {
+        return "—";
+    }
+
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    if (days > 0) {
+        return `${days}d ${hours}h`;
+    }
+
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    }
+
+    return `${minutes}m`;
+}
+
+function renderPlaytimeLeaderboard(payload) {
+    const list = document.querySelector(
+        "#playtime-leaderboard",
+    );
+
+    list.replaceChildren();
+
+    if (!payload.players?.length) {
+        const message = document.createElement("p");
+        message.className = "muted";
+        message.textContent =
+            "No playtime has been tracked yet.";
+
+        list.appendChild(message);
+        return;
+    }
+
+    for (const player of payload.players) {
+        const row = document.createElement("article");
+        row.className = "leaderboard-row";
+
+        const rank = document.createElement("span");
+        rank.className = "leaderboard-rank";
+        rank.textContent = `#${player.rank}`;
+
+        const identity = document.createElement("div");
+        identity.className = "leaderboard-identity";
+
+        const name = document.createElement("strong");
+        name.textContent = player.name;
+
+        const detail = document.createElement("span");
+        detail.className = "leaderboard-last-seen";
+        detail.textContent =
+            `${player.session_count} session` +
+            `${player.session_count === 1 ? "" : "s"}` +
+            `${player.currently_online ? " · Online" : ""}`;
+
+        identity.append(name, detail);
+
+        const time = document.createElement("span");
+        time.className = "leaderboard-level";
+        time.textContent =
+            formatPlaytime(player.total_seconds);
+
+        row.append(rank, identity, time);
+        list.appendChild(row);
+    }
+}
+
+async function refreshPlaytimeLeaderboard() {
+    try {
+        const response = await fetch(
+            "/api/leaderboards/playtime?limit=10",
+            {
+                headers: {
+                    Accept: "application/json",
+                },
+                cache: "no-store",
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        renderPlaytimeLeaderboard(
+            await response.json(),
+        );
+    } catch (error) {
+        console.error(
+            "Playtime leaderboard refresh failed",
+            error,
+        );
+    }
+}
+
 function refreshDashboard() {
     refreshStatus();
     refreshPlayers();
     refreshLevelLeaderboard();
+    refreshPlaytimeLeaderboard();
 }
 
 refreshDashboard();
