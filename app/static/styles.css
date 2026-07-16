@@ -34,6 +34,14 @@ body {
         #0b1020;
 }
 
+.backup-healthy {
+    color: #4ade80;
+}
+
+.backup-warning {
+    color: #fbbf24;
+}
+
 .dashboard {
     width: min(1100px, calc(100% - 32px));
     margin: 0 auto;

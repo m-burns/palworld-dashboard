@@ -20,6 +20,26 @@ function formatUptime(totalSeconds) {
     return `${minutes}m`;
 }
 
+function formatDuration(totalSeconds) {
+    if (totalSeconds === null || totalSeconds === undefined) {
+        return "Unknown age";
+    }
+
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    if (days > 0) {
+        return `${days}d ${hours}h ago`;
+    }
+
+    if (hours > 0) {
+        return `${hours}h ${minutes}m ago`;
+    }
+
+    return `${minutes}m ago`;
+}
+
 function formatFrameTime(value) {
     if (value === null || value === undefined) {
         return "—";
@@ -40,7 +60,7 @@ function formatBytes(bytes) {
 
     while (value >= 1024 && unit < units.length - 1) {
         value /= 1024;
-        unit++;
+        unit += 1;
     }
 
     return `${value.toFixed(unit >= 3 ? 1 : 0)} ${units[unit]}`;
@@ -75,6 +95,37 @@ function setServerState(online) {
     statusDot.classList.add("status-offline");
     statusText.textContent = "Server unavailable";
     apiState.textContent = "Disconnected";
+}
+
+function updateBackupStatus(backup) {
+    const state = document.querySelector("#backup-state");
+    const detail = document.querySelector("#backup-detail");
+
+    state.classList.remove(
+        "backup-healthy",
+        "backup-warning",
+    );
+
+    if (!backup?.exists) {
+        state.textContent = "Missing";
+        state.classList.add("backup-warning");
+        detail.textContent = "No backup found";
+        return;
+    }
+
+    state.textContent = backup.healthy
+        ? "Healthy"
+        : "Overdue";
+
+    state.classList.add(
+        backup.healthy
+            ? "backup-healthy"
+            : "backup-warning",
+    );
+
+    detail.textContent =
+        `${formatDuration(backup.age_seconds)} · ` +
+        `${formatBytes(backup.size_bytes)}`;
 }
 
 async function refreshDashboard() {
@@ -120,8 +171,6 @@ async function refreshDashboard() {
         document.querySelector("#base-count").textContent =
             data.base_count ?? "—";
 
-        // Infrastructure metrics
-
         const infrastructure = data.infrastructure;
 
         document.querySelector("#cpu-percent").textContent =
@@ -162,6 +211,8 @@ async function refreshDashboard() {
                       infrastructure.disk_total_bytes
                   )}`
                 : "Unavailable";
+
+        updateBackupStatus(data.latest_backup);
 
         lastChecked.textContent =
             `Last checked ${new Date(
