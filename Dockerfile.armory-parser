@@ -1,0 +1,58 @@
+FROM python:3.13-slim AS builder
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends \
+        build-essential \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY requirements-armory-parser.txt .
+COPY armory_parser/build_catalog.py .
+
+ARG PALWORLD_SAVE_TOOLS_COMMIT=8ff698915f4880d5ca5075067592f46e9b0d603c
+ARG CHARACTER_CATALOG_SHA256=9f775b4ec159069f23859428ef785b6e7900f87b629a118d54480d7cd175fc2f
+
+RUN git clone \
+        --filter=blob:none \
+        https://github.com/deafdudecomputers/PalworldSaveTools.git \
+        /source \
+    && git -C /source checkout --detach "$PALWORLD_SAVE_TOOLS_COMMIT" \
+    && test "$(git -C /source rev-parse HEAD)" = "$PALWORLD_SAVE_TOOLS_COMMIT" \
+    && python build_catalog.py \
+        --source /source/resources/game_data/characters.json \
+        --source-commit "$PALWORLD_SAVE_TOOLS_COMMIT" \
+        --expected-sha256 "$CHARACTER_CATALOG_SHA256" \
+        --output /catalog/pals.json
+
+RUN python -m pip wheel \
+    --no-cache-dir \
+    --wheel-dir /wheels \
+    --requirement requirements-armory-parser.txt
+
+
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN useradd \
+    --create-home \
+    --uid 10002 \
+    armory-parser
+
+WORKDIR /app
+
+COPY --from=builder /wheels /wheels
+COPY --from=builder /catalog /app/catalog
+RUN python -m pip install \
+    --no-cache-dir \
+    /wheels/*.whl \
+    && rm -rf /wheels
+
+COPY armory_parser ./armory_parser
+
+USER armory-parser
+
+ENTRYPOINT ["python", "-m", "armory_parser.cli"]
