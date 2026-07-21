@@ -131,3 +131,4 @@ See the project documentation for more detail:
 - [Deployment and recovery](docs/DEPLOYMENT.md)
 - [Roadmap](docs/ROADMAP.md)
 - [AI development guidelines](docs/AI_GUIDELINES.md)
+- [Paldeck snapshot import](docs/PALDECK_IMPORT.md)

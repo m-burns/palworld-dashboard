@@ -1,0 +1,2 @@
+palooz @ git+https://github.com/deafdudecomputers/PalworldSaveTools.git@8ff698915f4880d5ca5075067592f46e9b0d603c#subdirectory=src/palsav/palooz
+palsav-flex @ git+https://github.com/deafdudecomputers/PalworldSaveTools.git@8ff698915f4880d5ca5075067592f46e9b0d603c#subdirectory=src/palsav
