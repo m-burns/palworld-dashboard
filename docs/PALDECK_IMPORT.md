@@ -73,7 +73,46 @@ The caller is responsible for capturing standard output into a mode-`600`
 temporary file before a later database import. Parser diagnostics are written
 to standard error. A failed run must not replace the last successful snapshot.
 
+## Import into SQLite
+
+The dashboard image contains a separate ingestion command. It accepts only the
+sanitized schema-2 JSON produced by the parser, validates the complete document,
+and writes the snapshot in one database transaction:
+
+```bash
+python -m app.armory_cli sanitized-snapshot.json
+```
+
+Imports are idempotent by snapshot SHA-256. Reprocessing the same backup is a
+successful no-op. A validation or database failure rolls back the transaction,
+so the last successful Armory snapshot remains available. Save-derived players
+are deliberately stored separately from name-based dashboard players; linking a
+public name will require an explicit opt-in mechanism.
+
+## Schedule the latest completed backup
+
+Build the parser with the production tag once after a catalog or parser update:
+
+```bash
+docker build \
+  --file Dockerfile.armory-parser \
+  --tag palworld-armory-parser:latest .
+```
+
+Then schedule the host runner every four hours. It uses a non-blocking lock,
+selects the newest completed `.tar.gz` backup, keeps parsing offline and
+read-only, and streams sanitized JSON directly into the dashboard container:
+
+```cron
+17 */4 * * * /opt/palworld-dashboard/scripts/import-latest-paldeck.sh >> /var/log/palworld-armory.log 2>&1
+```
+
+The cron account must be able to run Docker and read the mode-`600` identity
+secret. Keep the secret stable: replacing it creates different pseudonymous
+player keys. The runner can safely see the same backup more than once because
+the database import is idempotent.
+
 ## Current scope
 
-Database ingestion, scheduling, retention, opt-out controls, and public Armory
-routes are intentionally outside this first step.
+Snapshot retention, opt-out controls, player-managed public names, and public
+Armory routes remain outside this step.
