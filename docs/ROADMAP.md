@@ -12,6 +12,7 @@
 - Player profiles
 - Level leaderboard
 - Playtime leaderboard
+- Paldeck Armory and completion leaderboard
 
 ---
 
@@ -43,7 +44,6 @@
 - Individual profiles
 - Guild pages
 - Achievement tracking
-- Paldex progress
 
 ### Administration
 

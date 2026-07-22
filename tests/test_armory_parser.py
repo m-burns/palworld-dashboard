@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from armory_parser.extractor import SnapshotError, extract_snapshot
+from armory_parser.extractor import LoadedPlayer, SnapshotError, extract_snapshot
 
 
 PLAYER_GUID = "0123456789ABCDEF0123456789ABCDEF"
@@ -161,6 +161,32 @@ class ArmoryParserTests(unittest.TestCase):
         self.assertEqual(player["total_captures"], 3)
         self.assertEqual(len(player["species"]), 1)
         self.assertEqual(player["species"][0]["catalog_key"], "paldeck:1")
+
+    def test_adds_only_the_matching_sanitized_character_name(self) -> None:
+        archive_path = self._create_archive(
+            {
+                "Saved/world/Level.sav": b"world",
+                f"Saved/world/Players/{PLAYER_GUID}.sav": b"save",
+            }
+        )
+
+        result = extract_snapshot(
+            archive_path,
+            SECRET,
+            record_loader=lambda _: LoadedPlayer(
+                record_data={},
+                player_uid="player-uid",
+            ),
+            world_player_loader=lambda _: {
+                "player-uid": "  Chosen Hero  ",
+                "different-player": "Must Not Leak",
+            },
+            catalog=TEST_CATALOG,
+        )
+
+        self.assertEqual(result["schema_version"], 3)
+        self.assertEqual(result["players"][0]["display_name"], "Chosen Hero")
+        self.assertNotIn("Must Not Leak", str(result))
 
     def _create_archive(self, members: dict[str, bytes]) -> Path:
         temporary = tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False)

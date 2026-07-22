@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class ArmorySpeciesImport(BaseModel):
@@ -26,6 +26,7 @@ class ArmoryPlayerImport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     internal_player_key: str = Field(pattern=r"^[0-9a-f]{64}$")
+    display_name: str | None = Field(default=None, min_length=1, max_length=64)
     completed_entries: int = Field(ge=0)
     completion_total: int = Field(gt=0)
     completion_percent: float = Field(ge=0, le=100)
@@ -33,6 +34,17 @@ class ArmoryPlayerImport(BaseModel):
     total_captures: int = Field(ge=0)
     unmapped_species_count: int = Field(ge=0)
     species: list[ArmorySpeciesImport]
+
+    @field_validator("display_name")
+    @classmethod
+    def validate_display_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if value != value.strip() or any(
+            ord(character) < 32 for character in value
+        ):
+            raise ValueError("display name contains invalid characters")
+        return value
 
     @model_validator(mode="after")
     def validate_totals(self) -> "ArmoryPlayerImport":
@@ -69,7 +81,7 @@ class ArmoryPlayerImport(BaseModel):
 class ArmorySnapshotImport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[2]
+    schema_version: Literal[3]
     snapshot_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     snapshot_created_at: datetime
     catalog_source_commit: str = Field(pattern=r"^[0-9a-f]{40}$")

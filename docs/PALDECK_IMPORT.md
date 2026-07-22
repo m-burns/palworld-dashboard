@@ -1,15 +1,17 @@
 # Paldeck snapshot import
 
 The Armory parser is an isolated, read-only proof of concept. It reads player
-saves from a completed Palworld backup and writes a sanitized JSON document to
-standard output. It does not read live saves, write to a save archive, connect
-to the dashboard database, or publish a web endpoint.
+saves and the player-name mapping from `Level.sav` in a completed backup, then
+writes a sanitized JSON document to standard output. It does not read live
+saves, write to a save archive, connect to the dashboard database, or publish a
+web endpoint.
 
 ## Privacy boundary
 
 The output is limited to:
 
 - An HMAC-derived internal player key
+- The player-chosen character display name, when valid
 - Captured and encountered species totals
 - Total captures
 - Pal species keys, capture counts, and discovery flags
@@ -17,7 +19,9 @@ The output is limited to:
 - Snapshot timestamp and SHA-256 digest
 
 It does not emit player GUIDs, save filenames, Steam or platform IDs, account
-names, IP addresses, locations, inventories, guild data, or raw save content.
+identifiers, IP addresses, locations, inventories, guild data, or raw save
+content. Character names are Unicode-normalized, trimmed, length-limited, and
+rejected if they contain control characters.
 The same private secret must be used for every import so a player receives a
 stable internal key. Never commit or print that secret.
 
@@ -76,7 +80,7 @@ to standard error. A failed run must not replace the last successful snapshot.
 ## Import into SQLite
 
 The dashboard image contains a separate ingestion command. It accepts only the
-sanitized schema-2 JSON produced by the parser, validates the complete document,
+sanitized schema-3 JSON produced by the parser, validates the complete document,
 and writes the snapshot in one database transaction:
 
 ```bash
@@ -86,8 +90,8 @@ python -m app.armory_cli sanitized-snapshot.json
 Imports are idempotent by snapshot SHA-256. Reprocessing the same backup is a
 successful no-op. A validation or database failure rolls back the transaction,
 so the last successful Armory snapshot remains available. Save-derived players
-are deliberately stored separately from name-based dashboard players; linking a
-public name will require an explicit opt-in mechanism.
+remain separate from name-based REST API records; their chosen character name
+is attached only through the matching UID inside the same completed snapshot.
 
 ## Schedule the latest completed backup
 
@@ -119,6 +123,9 @@ The dashboard exposes the latest successfully imported snapshot through:
 - `GET /api/armory/leaderboard?limit=100`
 - `GET /api/armory/players/{player_id}`
 
+The corresponding browser views are available at `/armory` and
+`/armory/players/{player_id}`. The main dashboard links directly to the Armory.
+
 Responses use stable server-local labels such as `Player 001`. The private HMAC
 player key, save GUID, Steam or platform account identifiers, and raw save data
 are never returned. Until an explicit opt-in naming workflow exists, the API
@@ -127,5 +134,5 @@ REST API.
 
 ## Current scope
 
-Snapshot retention, opt-out controls, player-managed public names, and the
-Armory web interface remain outside this step.
+Snapshot retention, opt-out controls, player-managed public names, Pal artwork,
+and names for entries absent from a player's save remain outside this step.

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <main class="dashboard armory-page">
+        <nav class="profile-navigation">
+            <a href="/" class="back-link">← Back to dashboard</a>
+        </nav>
+
+        <header class="hero armory-hero">
+            <div>
+                <p class="eyebrow">COMMUNITY ARMORY</p>
+                <h1>Paldeck standings</h1>
+                <p class="armory-intro">
+                    See how the server's adventurers are progressing through
+                    the Paldeck by character name—without exposing account or
+                    platform details.
+                </p>
+            </div>
+            <div class="armory-orb" aria-hidden="true">PAL</div>
+        </header>
+
+        <section class="metric-grid armory-summary">
+            <article class="metric-card">
+                <span class="metric-label">Tracked players</span>
+                <strong id="armory-player-total">—</strong>
+            </article>
+            <article class="metric-card">
+                <span class="metric-label">Paldeck size</span>
+                <strong id="armory-catalog-total">—</strong>
+            </article>
+            <article class="metric-card">
+                <span class="metric-label">Latest snapshot</span>
+                <strong id="armory-snapshot-age">—</strong>
+                <small id="armory-snapshot-time" class="metric-detail">Loading…</small>
+            </article>
+        </section>
+
+        <section class="panel leaderboard-panel armory-board">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">PALDECK LEADERBOARD</p>
+                    <h2>Server completion</h2>
+                </div>
+                <span class="leaderboard-badge">Latest snapshot</span>
+            </div>
+
+            <div id="armory-loading" class="armory-message">
+                <span class="status-dot status-loading"></span>
+                <span>Loading Armory records…</span>
+            </div>
+            <div id="armory-leaderboard" class="armory-leaderboard" hidden></div>
+            <div id="armory-empty" class="armory-empty" hidden>
+                <strong>No Armory snapshot yet</strong>
+                <p class="muted">
+                    The leaderboard will appear after the first scheduled
+                    Paldeck import completes.
+                </p>
+            </div>
+        </section>
+
+        <p class="privacy-note">
+            Character names come from completed save snapshots. Save IDs,
+            Steam IDs, platform accounts, and raw save data are never displayed.
+        </p>
+    </main>
+    <script src="/static/armory.js"></script>
+</body>
+</html>

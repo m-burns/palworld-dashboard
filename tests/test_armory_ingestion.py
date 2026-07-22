@@ -12,6 +12,7 @@ from app.armory_models import ArmorySnapshotImport
 from app.database.base import Base
 from app.database.models import (
     ArmoryPlayer,
+    ArmoryPlayerName,
     ArmoryPlayerSnapshot,
     ArmorySnapshot,
     ArmorySpeciesSnapshot,
@@ -51,6 +52,7 @@ class ArmoryIngestionTests(unittest.IsolatedAsyncioTestCase):
         async with self.sessions() as session:
             self.assertEqual(await self._count(session, ArmorySnapshot), 1)
             self.assertEqual(await self._count(session, ArmoryPlayer), 1)
+            self.assertEqual(await self._count(session, ArmoryPlayerName), 1)
             self.assertEqual(await self._count(session, ArmoryPlayerSnapshot), 1)
             self.assertEqual(await self._count(session, ArmorySpeciesSnapshot), 1)
 
@@ -64,6 +66,21 @@ class ArmoryIngestionTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(result.imported)
         async with self.sessions() as session:
             self.assertEqual(await self._count(session, ArmorySnapshot), 1)
+
+    async def test_reimport_backfills_a_missing_character_name(self) -> None:
+        payload = self._payload()
+        payload.players[0].display_name = None
+        async with self.sessions() as session:
+            await self.service.ingest_snapshot(session, payload)
+
+        payload.players[0].display_name = "Recovered Name"
+        async with self.sessions() as session:
+            result = await self.service.ingest_snapshot(session, payload)
+        async with self.sessions() as session:
+            leaderboard = await self.service.get_leaderboard(session, limit=10)
+
+        self.assertFalse(result.imported)
+        self.assertEqual(leaderboard.players[0].display_name, "Recovered Name")
 
     async def test_out_of_order_import_preserves_seen_range(self) -> None:
         newest = datetime(2026, 7, 22, 12, tzinfo=UTC)
@@ -135,7 +152,7 @@ class ArmoryIngestionTests(unittest.IsolatedAsyncioTestCase):
         serialized = leaderboard.model_dump_json()
         self.assertTrue(leaderboard.available)
         self.assertEqual(len(leaderboard.players), 2)
-        self.assertEqual(leaderboard.players[0].display_name, "Player 001")
+        self.assertEqual(leaderboard.players[0].display_name, "Chosen Hero")
         self.assertNotIn("d" * 64, serialized)
         self.assertNotIn("f" * 64, serialized)
 
@@ -148,7 +165,7 @@ class ArmoryIngestionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(profile)
         assert profile is not None
         serialized = profile.model_dump_json()
-        self.assertEqual(profile.display_name, "Player 001")
+        self.assertEqual(profile.display_name, "Chosen Hero")
         self.assertEqual(profile.species[0].name, "Lamball")
         self.assertNotIn("d" * 64, serialized)
 
@@ -163,6 +180,39 @@ class ArmoryIngestionTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsNone(profile)
 
+    async def test_missing_character_name_uses_private_fallback_label(self) -> None:
+        payload = self._payload()
+        payload.players[0].display_name = None
+        async with self.sessions() as session:
+            await self.service.ingest_snapshot(session, payload)
+        async with self.sessions() as session:
+            leaderboard = await self.service.get_leaderboard(session, limit=10)
+
+        self.assertEqual(leaderboard.players[0].display_name, "Player 001")
+
+    async def test_older_snapshot_does_not_restore_an_old_character_name(self) -> None:
+        newest = self._payload(
+            created_at=datetime(2026, 7, 22, 16, tzinfo=UTC),
+            digest="1" * 64,
+        )
+        oldest = self._payload(
+            created_at=datetime(2026, 7, 22, 12, tzinfo=UTC),
+            digest="2" * 64,
+        )
+        newest.players[0].display_name = "Current Name"
+        oldest.players[0].display_name = "Old Name"
+
+        async with self.sessions() as session:
+            await self.service.ingest_snapshot(session, newest)
+        async with self.sessions() as session:
+            await self.service.ingest_snapshot(session, oldest)
+        async with self.sessions() as session:
+            profile = await self.service.get_player_profile(session, player_id=1)
+
+        self.assertIsNotNone(profile)
+        assert profile is not None
+        self.assertEqual(profile.display_name, "Current Name")
+
     @staticmethod
     async def _count(session, model: type) -> int:
         result = await session.execute(select(func.count()).select_from(model))
@@ -175,7 +225,7 @@ class ArmoryIngestionTests(unittest.IsolatedAsyncioTestCase):
     ) -> ArmorySnapshotImport:
         return ArmorySnapshotImport.model_validate(
             {
-                "schema_version": 2,
+                "schema_version": 3,
                 "snapshot_sha256": digest,
                 "snapshot_created_at": (
                     created_at or datetime(2026, 7, 22, 12, tzinfo=UTC)
@@ -185,6 +235,7 @@ class ArmoryIngestionTests(unittest.IsolatedAsyncioTestCase):
                 "players": [
                     {
                         "internal_player_key": "d" * 64,
+                        "display_name": "Chosen Hero",
                         "completed_entries": 1,
                         "completion_total": 299,
                         "completion_percent": 0.33,
