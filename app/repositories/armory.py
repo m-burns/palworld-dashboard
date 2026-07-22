@@ -3,7 +3,12 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.armory_models import ArmorySnapshotImport
+from app.armory_models import (
+    ArmoryLeaderboardEntry,
+    ArmoryPlayerProfile,
+    ArmorySnapshotImport,
+    ArmorySpeciesProgress,
+)
 from app.database.models import (
     ArmoryPlayer,
     ArmoryPlayerSnapshot,
@@ -13,6 +18,106 @@ from app.database.models import (
 
 
 class ArmoryRepository:
+    async def get_latest_snapshot(
+        self,
+        session: AsyncSession,
+    ) -> ArmorySnapshot | None:
+        result = await session.execute(
+            select(ArmorySnapshot).order_by(
+                ArmorySnapshot.snapshot_created_at.desc(),
+                ArmorySnapshot.id.desc(),
+            ).limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_leaderboard(
+        self,
+        session: AsyncSession,
+        snapshot_id: int,
+        limit: int,
+    ) -> list[ArmoryLeaderboardEntry]:
+        result = await session.execute(
+            select(ArmoryPlayerSnapshot, ArmoryPlayer)
+            .join(
+                ArmoryPlayer,
+                ArmoryPlayer.id == ArmoryPlayerSnapshot.player_id,
+            )
+            .where(ArmoryPlayerSnapshot.snapshot_id == snapshot_id)
+            .order_by(
+                ArmoryPlayerSnapshot.completed_entries.desc(),
+                ArmoryPlayerSnapshot.total_captures.desc(),
+                ArmoryPlayer.id.asc(),
+            )
+            .limit(limit)
+        )
+        return [
+            ArmoryLeaderboardEntry(
+                rank=rank,
+                player_id=player.id,
+                display_name=self._display_name(player.id),
+                completed_entries=progress.completed_entries,
+                completion_total=progress.completion_total,
+                completion_percent=progress.completion_percent,
+                encountered_entries=progress.encountered_entries,
+                total_captures=progress.total_captures,
+            )
+            for rank, (progress, player) in enumerate(result.all(), start=1)
+        ]
+
+    async def get_player_profile(
+        self,
+        session: AsyncSession,
+        snapshot: ArmorySnapshot,
+        player_id: int,
+    ) -> ArmoryPlayerProfile | None:
+        result = await session.execute(
+            select(ArmoryPlayerSnapshot, ArmoryPlayer)
+            .join(
+                ArmoryPlayer,
+                ArmoryPlayer.id == ArmoryPlayerSnapshot.player_id,
+            )
+            .where(
+                ArmoryPlayerSnapshot.snapshot_id == snapshot.id,
+                ArmoryPlayer.id == player_id,
+            )
+        )
+        row = result.one_or_none()
+        if row is None:
+            return None
+
+        progress, player = row
+        species_result = await session.execute(
+            select(ArmorySpeciesSnapshot).where(
+                ArmorySpeciesSnapshot.player_snapshot_id == progress.id
+            )
+        )
+        species = [
+            ArmorySpeciesProgress(
+                catalog_key=entry.catalog_key,
+                name=entry.name,
+                paldeck_number=entry.paldeck_number,
+                capture_count=entry.capture_count,
+                discovered=entry.discovered,
+                counts_toward_completion=entry.counts_toward_completion,
+                catalog_status=entry.catalog_status,
+            )
+            for entry in species_result.scalars().all()
+        ]
+        species.sort(key=self._species_sort_key)
+
+        return ArmoryPlayerProfile(
+            player_id=player.id,
+            display_name=self._display_name(player.id),
+            snapshot_created_at=self._as_utc(snapshot.snapshot_created_at),
+            completed_entries=progress.completed_entries,
+            completion_total=progress.completion_total,
+            completion_percent=progress.completion_percent,
+            encountered_entries=progress.encountered_entries,
+            total_captures=progress.total_captures,
+            unmapped_species_count=progress.unmapped_species_count,
+            species=species,
+        )
+
     async def snapshot_exists(
         self,
         session: AsyncSession,
@@ -107,3 +212,18 @@ class ArmoryRepository:
         if value.tzinfo is None:
             return value.replace(tzinfo=UTC)
         return value.astimezone(UTC)
+
+    @staticmethod
+    def _display_name(player_id: int) -> str:
+        return f"Player {player_id:03d}"
+
+    @staticmethod
+    def _species_sort_key(
+        species: ArmorySpeciesProgress,
+    ) -> tuple[bool, int, str, str]:
+        number = species.paldeck_number
+        if number is None:
+            return (True, 0, "", species.name.casefold())
+        suffix = "B" if number.endswith("B") else ""
+        index = int(number[:-1] if suffix else number)
+        return (False, index, suffix, species.name.casefold())
