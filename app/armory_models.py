@@ -11,7 +11,11 @@ class ArmorySpeciesImport(BaseModel):
 
     catalog_key: str = Field(min_length=1, max_length=255)
     name: str = Field(min_length=1, max_length=255)
-    paldeck_number: str | None = Field(default=None, max_length=16)
+    paldeck_number: str | None = Field(
+        default=None,
+        pattern=r"^[0-9]+B?$",
+        max_length=16,
+    )
     capture_count: int = Field(ge=0)
     discovered: bool
     counts_toward_completion: bool
@@ -85,3 +89,49 @@ class ArmorySnapshotImport(BaseModel):
         if self.snapshot_created_at.tzinfo is None:
             raise ValueError("snapshot timestamp must include a timezone")
         return self
+
+
+class ArmoryLeaderboardEntry(BaseModel):
+    rank: int
+    player_id: int
+    display_name: str
+    completed_entries: int
+    completion_total: int
+    completion_percent: float
+    encountered_entries: int
+    total_captures: int
+
+
+class ArmoryLeaderboardResponse(BaseModel):
+    available: bool
+    generated_at: datetime
+    snapshot_created_at: datetime | None = None
+    completion_total: int | None = None
+    players: list[ArmoryLeaderboardEntry]
+
+
+class ArmorySpeciesProgress(BaseModel):
+    catalog_key: str
+    name: str
+    paldeck_number: str | None = Field(
+        default=None,
+        pattern=r"^[0-9]+B?$",
+        max_length=16,
+    )
+    capture_count: int
+    discovered: bool
+    counts_toward_completion: bool
+    catalog_status: Literal["mapped", "unmapped"]
+
+
+class ArmoryPlayerProfile(BaseModel):
+    player_id: int
+    display_name: str
+    snapshot_created_at: datetime
+    completed_entries: int
+    completion_total: int
+    completion_percent: float
+    encountered_entries: int
+    total_captures: int
+    unmapped_species_count: int
+    species: list[ArmorySpeciesProgress]

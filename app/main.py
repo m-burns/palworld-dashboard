@@ -17,6 +17,10 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.palworld import PalworldClient
+from app.armory_models import (
+    ArmoryLeaderboardResponse,
+    ArmoryPlayerProfile,
+)
 from app.config import get_settings
 from app.database.session import (
     SessionFactory,
@@ -32,6 +36,8 @@ from app.models import (
     ServerStatus,
 )
 from app.repositories.players import PlayerRepository
+from app.repositories.armory import ArmoryRepository
+from app.services.armory import ArmoryService
 from app.services.backups import BackupService
 from app.services.infrastructure import InfrastructureService
 from app.services.players import PlayerService
@@ -99,15 +105,20 @@ status_service = StatusService(
 )
 
 player_repository = PlayerRepository()
+armory_repository = ArmoryRepository()
 
 player_service = PlayerService(
     palworld_client=palworld_client,
     player_repository=player_repository,
 )
 
+armory_service = ArmoryService(
+    repository=armory_repository,
+)
+
 app = FastAPI(
     title="Palworld Dashboard",
-    version="0.7.0",
+    version="0.8.0",
     lifespan=lifespan,
 )
 
@@ -204,6 +215,44 @@ async def playtime_leaderboard(
         session=session,
         limit=limit,
     )
+
+
+@app.get(
+    "/api/armory/leaderboard",
+    response_model=ArmoryLeaderboardResponse,
+)
+async def armory_leaderboard(
+    limit: int = Query(
+        default=100,
+        ge=1,
+        le=100,
+    ),
+    session: AsyncSession = Depends(get_session),
+) -> ArmoryLeaderboardResponse:
+    return await armory_service.get_leaderboard(
+        session=session,
+        limit=limit,
+    )
+
+
+@app.get(
+    "/api/armory/players/{player_id}",
+    response_model=ArmoryPlayerProfile,
+)
+async def armory_player_profile(
+    player_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> ArmoryPlayerProfile:
+    profile = await armory_service.get_player_profile(
+        session=session,
+        player_id=player_id,
+    )
+    if profile is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Armory player not found",
+        )
+    return profile
 
 @app.get(
     "/api/players/{player_key}",

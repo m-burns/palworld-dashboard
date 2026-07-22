@@ -107,6 +107,62 @@ class ArmoryIngestionTests(unittest.IsolatedAsyncioTestCase):
         async with self.sessions() as session:
             self.assertEqual(await self._count(session, ArmorySnapshot), 0)
 
+    async def test_empty_armory_is_reported_as_unavailable(self) -> None:
+        async with self.sessions() as session:
+            leaderboard = await self.service.get_leaderboard(session, limit=10)
+
+        self.assertFalse(leaderboard.available)
+        self.assertEqual(leaderboard.players, [])
+
+    async def test_leaderboard_uses_latest_snapshot_without_private_keys(self) -> None:
+        old_payload = self._payload()
+        new_payload = self._payload(
+            created_at=datetime(2026, 7, 22, 16, tzinfo=UTC),
+            digest="e" * 64,
+        )
+        second_player = new_payload.players[0].model_copy(
+            update={"internal_player_key": "f" * 64}
+        )
+        new_payload.players.append(second_player)
+
+        async with self.sessions() as session:
+            await self.service.ingest_snapshot(session, old_payload)
+        async with self.sessions() as session:
+            await self.service.ingest_snapshot(session, new_payload)
+        async with self.sessions() as session:
+            leaderboard = await self.service.get_leaderboard(session, limit=10)
+
+        serialized = leaderboard.model_dump_json()
+        self.assertTrue(leaderboard.available)
+        self.assertEqual(len(leaderboard.players), 2)
+        self.assertEqual(leaderboard.players[0].display_name, "Player 001")
+        self.assertNotIn("d" * 64, serialized)
+        self.assertNotIn("f" * 64, serialized)
+
+    async def test_profile_returns_only_public_progress_fields(self) -> None:
+        async with self.sessions() as session:
+            await self.service.ingest_snapshot(session, self._payload())
+        async with self.sessions() as session:
+            profile = await self.service.get_player_profile(session, player_id=1)
+
+        self.assertIsNotNone(profile)
+        assert profile is not None
+        serialized = profile.model_dump_json()
+        self.assertEqual(profile.display_name, "Player 001")
+        self.assertEqual(profile.species[0].name, "Lamball")
+        self.assertNotIn("d" * 64, serialized)
+
+    async def test_unknown_profile_is_not_returned(self) -> None:
+        async with self.sessions() as session:
+            await self.service.ingest_snapshot(session, self._payload())
+        async with self.sessions() as session:
+            profile = await self.service.get_player_profile(
+                session,
+                player_id=999,
+            )
+
+        self.assertIsNone(profile)
+
     @staticmethod
     async def _count(session, model: type) -> int:
         result = await session.execute(select(func.count()).select_from(model))

@@ -112,7 +112,20 @@ secret. Keep the secret stable: replacing it creates different pseudonymous
 player keys. The runner can safely see the same backup more than once because
 the database import is idempotent.
 
+## Read-only Armory API
+
+The dashboard exposes the latest successfully imported snapshot through:
+
+- `GET /api/armory/leaderboard?limit=100`
+- `GET /api/armory/players/{player_id}`
+
+Responses use stable server-local labels such as `Player 001`. The private HMAC
+player key, save GUID, Steam or platform account identifiers, and raw save data
+are never returned. Until an explicit opt-in naming workflow exists, the API
+does not attempt to associate Armory players with names observed by the server
+REST API.
+
 ## Current scope
 
-Snapshot retention, opt-out controls, player-managed public names, and public
-Armory routes remain outside this step.
+Snapshot retention, opt-out controls, player-managed public names, and the
+Armory web interface remain outside this step.
