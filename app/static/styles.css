@@ -12,6 +12,10 @@
     background: #0b1020;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -356,5 +360,345 @@ dd {
 
     .leaderboard-level {
         grid-column: 2;
+    }
+}
+
+.primary-link,
+.back-link,
+.player-profile-link {
+    color: #7dd3fc;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.primary-link {
+    display: inline-flex;
+    margin-top: 8px;
+    padding: 11px 16px;
+    border: 1px solid rgba(125, 211, 252, 0.28);
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.09);
+}
+
+.primary-link:hover,
+.back-link:hover,
+.player-profile-link:hover {
+    color: #bae6fd;
+}
+
+.profile-navigation {
+    margin-bottom: 28px;
+}
+
+.armory-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
+}
+
+.armory-intro {
+    max-width: 650px;
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.armory-orb {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 132px;
+    height: 132px;
+    border: 2px solid rgba(125, 211, 252, 0.55);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.28), transparent 18%),
+        linear-gradient(145deg, #2563eb, #22c55e);
+    box-shadow: 0 0 55px rgba(56, 189, 248, 0.28);
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+}
+
+.armory-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.armory-board,
+.armory-collection-panel {
+    display: block;
+}
+
+.armory-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+    color: #cbd5e1;
+}
+
+.armory-empty {
+    margin-top: 24px;
+    padding: 28px;
+    border: 1px dashed rgba(148, 163, 184, 0.28);
+    border-radius: 14px;
+    text-align: center;
+}
+
+.armory-empty p {
+    margin-bottom: 0;
+}
+
+.armory-leaderboard {
+    display: grid;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.armory-rank-row {
+    display: grid;
+    grid-template-columns: 54px minmax(150px, 1fr) minmax(190px, 0.75fr) 24px;
+    align-items: center;
+    gap: 18px;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.035);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 150ms ease, transform 150ms ease, background 150ms ease;
+}
+
+.armory-rank-row:hover {
+    border-color: rgba(125, 211, 252, 0.38);
+    background: rgba(56, 189, 248, 0.07);
+    transform: translateY(-1px);
+}
+
+.armory-rank-number {
+    color: #facc15;
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+
+.armory-rank-identity strong,
+.armory-rank-identity span {
+    display: block;
+}
+
+.armory-rank-identity span,
+.armory-rank-progress span {
+    margin-top: 4px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+}
+
+.armory-rank-progress > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.progress-track {
+    overflow: hidden;
+    height: 8px;
+    margin-top: 9px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.18);
+}
+
+.progress-track > span {
+    display: block;
+    width: 0;
+    height: 100%;
+    margin: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #38bdf8, #4ade80);
+}
+
+.armory-rank-arrow {
+    color: #7dd3fc;
+    font-size: 1.2rem;
+}
+
+.privacy-note {
+    max-width: 720px;
+    margin: 22px auto 0;
+    color: #64748b;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.armory-player-hero h1 {
+    margin-bottom: 12px;
+}
+
+.armory-completion-card {
+    grid-column: span 2;
+}
+
+.armory-collection-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.armory-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-button {
+    padding: 9px 13px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.035);
+    color: #cbd5e1;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.filter-button:hover,
+.filter-button.active {
+    border-color: rgba(74, 222, 128, 0.45);
+    background: rgba(74, 222, 128, 0.12);
+    color: #86efac;
+}
+
+.armory-search {
+    display: block;
+    margin-top: 24px;
+}
+
+.armory-search input {
+    width: 100%;
+    padding: 13px 15px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 12px;
+    outline: none;
+    background: rgba(2, 6, 23, 0.48);
+    color: #eef2ff;
+    font: inherit;
+}
+
+.armory-search input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+.armory-species-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.armory-species-card {
+    min-height: 122px;
+    padding: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.armory-species-card.is-captured {
+    border-color: rgba(74, 222, 128, 0.32);
+    background: linear-gradient(145deg, rgba(74, 222, 128, 0.1), rgba(56, 189, 248, 0.035));
+}
+
+.armory-species-card.is-encountered {
+    border-color: rgba(250, 204, 21, 0.28);
+}
+
+.armory-species-card strong,
+.armory-species-card span {
+    display: block;
+}
+
+.armory-species-card strong {
+    margin-top: 12px;
+}
+
+.armory-species-number {
+    color: #7dd3fc;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.armory-species-state {
+    margin-top: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+}
+
+.sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 760px) {
+    .armory-hero {
+        align-items: flex-start;
+    }
+
+    .armory-orb {
+        width: 88px;
+        height: 88px;
+    }
+
+    .armory-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .armory-rank-row {
+        grid-template-columns: 42px 1fr 22px;
+    }
+
+    .armory-rank-progress {
+        grid-column: 2 / -1;
+    }
+}
+
+@media (max-width: 560px) {
+    .armory-hero {
+        display: block;
+    }
+
+    .armory-orb {
+        display: none;
+    }
+
+    .armory-completion-card {
+        grid-column: auto;
+    }
+
+    .armory-collection-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .armory-rank-row {
+        grid-template-columns: 36px 1fr;
+    }
+
+    .armory-rank-arrow {
+        display: none;
     }
 }

@@ -123,6 +123,19 @@ class ArmoryPlayer(Base):
     )
 
 
+class ArmoryPlayerName(Base):
+    __tablename__ = "armory_player_names"
+
+    player_id: Mapped[int] = mapped_column(
+        ForeignKey("armory_players.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    display_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    observed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+
 class ArmoryPlayerSnapshot(Base):
     __tablename__ = "armory_player_snapshots"
     __table_args__ = (

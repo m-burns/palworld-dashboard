@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <main class="dashboard armory-player-page" data-player-id="{{ player_id }}">
+        <nav class="profile-navigation">
+            <a href="/armory" class="back-link">← Back to Armory</a>
+        </nav>
+
+        <header class="hero armory-player-hero">
+            <p class="eyebrow">PALDECK PROFILE</p>
+            <h1 id="armory-profile-name">Loading player…</h1>
+            <p id="armory-profile-updated" class="muted">Loading snapshot…</p>
+        </header>
+
+        <section class="metric-grid">
+            <article class="metric-card armory-completion-card">
+                <span class="metric-label">Completion</span>
+                <strong id="armory-profile-percent">—</strong>
+                <div class="progress-track" aria-hidden="true">
+                    <span id="armory-profile-progress"></span>
+                </div>
+            </article>
+            <article class="metric-card">
+                <span class="metric-label">Captured</span>
+                <strong id="armory-profile-completed">—</strong>
+                <small class="metric-detail">Unique Paldeck entries</small>
+            </article>
+            <article class="metric-card">
+                <span class="metric-label">Encountered</span>
+                <strong id="armory-profile-encountered">—</strong>
+            </article>
+            <article class="metric-card">
+                <span class="metric-label">Total captures</span>
+                <strong id="armory-profile-captures">—</strong>
+            </article>
+            <article class="metric-card">
+                <span class="metric-label">Remaining</span>
+                <strong id="armory-profile-remaining">—</strong>
+            </article>
+        </section>
+
+        <section class="panel armory-collection-panel">
+            <div class="armory-collection-heading">
+                <div>
+                    <p class="eyebrow">RECORDED PALDECK</p>
+                    <h2>Known Pals</h2>
+                </div>
+                <div class="armory-filters" role="group" aria-label="Filter Pals">
+                    <button class="filter-button active" data-filter="all" type="button">All</button>
+                    <button class="filter-button" data-filter="captured" type="button">Captured</button>
+                    <button class="filter-button" data-filter="encountered" type="button">Seen only</button>
+                </div>
+            </div>
+
+            <label class="armory-search">
+                <span class="sr-only">Search known Pals</span>
+                <input id="armory-search" type="search" placeholder="Search known Pals…" autocomplete="off">
+            </label>
+
+            <p id="armory-result-count" class="muted"></p>
+            <div id="armory-species-grid" class="armory-species-grid"></div>
+            <div id="armory-profile-error" class="armory-empty" hidden>
+                <strong>Armory profile unavailable</strong>
+                <p class="muted">This player could not be found in the latest snapshot.</p>
+            </div>
+        </section>
+    </main>
+    <script src="/static/armory-player.js"></script>
+</body>
+</html>

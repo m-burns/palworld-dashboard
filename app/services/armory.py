@@ -34,6 +34,8 @@ class ArmoryService:
             )
             if not exists:
                 await self._repository.add_snapshot(session, payload)
+            else:
+                await self._repository.update_player_names(session, payload)
 
         return ArmoryImportResult(
             imported=not exists,

@@ -11,6 +11,7 @@ from app.armory_models import (
 )
 from app.database.models import (
     ArmoryPlayer,
+    ArmoryPlayerName,
     ArmoryPlayerSnapshot,
     ArmorySnapshot,
     ArmorySpeciesSnapshot,
@@ -37,10 +38,14 @@ class ArmoryRepository:
         limit: int,
     ) -> list[ArmoryLeaderboardEntry]:
         result = await session.execute(
-            select(ArmoryPlayerSnapshot, ArmoryPlayer)
+            select(ArmoryPlayerSnapshot, ArmoryPlayer, ArmoryPlayerName)
             .join(
                 ArmoryPlayer,
                 ArmoryPlayer.id == ArmoryPlayerSnapshot.player_id,
+            )
+            .outerjoin(
+                ArmoryPlayerName,
+                ArmoryPlayerName.player_id == ArmoryPlayer.id,
             )
             .where(ArmoryPlayerSnapshot.snapshot_id == snapshot_id)
             .order_by(
@@ -54,14 +59,16 @@ class ArmoryRepository:
             ArmoryLeaderboardEntry(
                 rank=rank,
                 player_id=player.id,
-                display_name=self._display_name(player.id),
+                display_name=self._display_name(player.id, player_name),
                 completed_entries=progress.completed_entries,
                 completion_total=progress.completion_total,
                 completion_percent=progress.completion_percent,
                 encountered_entries=progress.encountered_entries,
                 total_captures=progress.total_captures,
             )
-            for rank, (progress, player) in enumerate(result.all(), start=1)
+            for rank, (progress, player, player_name) in enumerate(
+                result.all(), start=1
+            )
         ]
 
     async def get_player_profile(
@@ -71,10 +78,14 @@ class ArmoryRepository:
         player_id: int,
     ) -> ArmoryPlayerProfile | None:
         result = await session.execute(
-            select(ArmoryPlayerSnapshot, ArmoryPlayer)
+            select(ArmoryPlayerSnapshot, ArmoryPlayer, ArmoryPlayerName)
             .join(
                 ArmoryPlayer,
                 ArmoryPlayer.id == ArmoryPlayerSnapshot.player_id,
+            )
+            .outerjoin(
+                ArmoryPlayerName,
+                ArmoryPlayerName.player_id == ArmoryPlayer.id,
             )
             .where(
                 ArmoryPlayerSnapshot.snapshot_id == snapshot.id,
@@ -85,7 +96,7 @@ class ArmoryRepository:
         if row is None:
             return None
 
-        progress, player = row
+        progress, player, player_name = row
         species_result = await session.execute(
             select(ArmorySpeciesSnapshot).where(
                 ArmorySpeciesSnapshot.player_snapshot_id == progress.id
@@ -107,7 +118,7 @@ class ArmoryRepository:
 
         return ArmoryPlayerProfile(
             player_id=player.id,
-            display_name=self._display_name(player.id),
+            display_name=self._display_name(player.id, player_name),
             snapshot_created_at=self._as_utc(snapshot.snapshot_created_at),
             completed_entries=progress.completed_entries,
             completion_total=progress.completion_total,
@@ -168,6 +179,13 @@ class ArmoryRepository:
                     self._as_utc(player.last_seen_at), snapshot_time
                 )
 
+            await self._upsert_player_name(
+                session,
+                player,
+                imported_player.display_name,
+                snapshot_time,
+            )
+
             player_snapshot = ArmoryPlayerSnapshot(
                 snapshot_id=snapshot.id,
                 player_id=player.id,
@@ -195,6 +213,48 @@ class ArmoryRepository:
                 for species in imported_player.species
             )
 
+    async def update_player_names(
+        self,
+        session: AsyncSession,
+        payload: ArmorySnapshotImport,
+    ) -> None:
+        snapshot_time = payload.snapshot_created_at.astimezone(UTC)
+        for imported_player in payload.players:
+            player = await self._get_player(
+                session,
+                imported_player.internal_player_key,
+            )
+            if player is None:
+                continue
+            await self._upsert_player_name(
+                session,
+                player,
+                imported_player.display_name,
+                snapshot_time,
+            )
+
+    async def _upsert_player_name(
+        self,
+        session: AsyncSession,
+        player: ArmoryPlayer,
+        display_name: str | None,
+        observed_at: datetime,
+    ) -> None:
+        if display_name is None:
+            return
+        player_name = await self._get_player_name(session, player.id)
+        if player_name is None:
+            session.add(
+                ArmoryPlayerName(
+                    player_id=player.id,
+                    display_name=display_name,
+                    observed_at=observed_at,
+                )
+            )
+        elif self._as_utc(player_name.observed_at) <= observed_at:
+            player_name.display_name = display_name
+            player_name.observed_at = observed_at
+
     async def _get_player(
         self,
         session: AsyncSession,
@@ -207,6 +267,18 @@ class ArmoryRepository:
         )
         return result.scalar_one_or_none()
 
+    async def _get_player_name(
+        self,
+        session: AsyncSession,
+        player_id: int,
+    ) -> ArmoryPlayerName | None:
+        result = await session.execute(
+            select(ArmoryPlayerName).where(
+                ArmoryPlayerName.player_id == player_id
+            )
+        )
+        return result.scalar_one_or_none()
+
     @staticmethod
     def _as_utc(value: datetime) -> datetime:
         if value.tzinfo is None:
@@ -214,7 +286,12 @@ class ArmoryRepository:
         return value.astimezone(UTC)
 
     @staticmethod
-    def _display_name(player_id: int) -> str:
+    def _display_name(
+        player_id: int,
+        player_name: ArmoryPlayerName | None,
+    ) -> str:
+        if player_name is not None:
+            return player_name.display_name
         return f"Player {player_id:03d}"
 
     @staticmethod

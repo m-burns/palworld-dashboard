@@ -118,7 +118,7 @@ armory_service = ArmoryService(
 
 app = FastAPI(
     title="Palworld Dashboard",
-    version="0.8.0",
+    version="0.9.0",
     lifespan=lifespan,
 )
 
@@ -253,6 +253,33 @@ async def armory_player_profile(
             detail="Armory player not found",
         )
     return profile
+
+
+@app.get("/armory", response_class=HTMLResponse)
+async def armory_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request,
+        name="armory.html",
+        context={"title": "Paldeck Armory"},
+    )
+
+
+@app.get(
+    "/armory/players/{player_id}",
+    response_class=HTMLResponse,
+)
+async def armory_player_page(
+    request: Request,
+    player_id: int,
+) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request,
+        name="armory-player.html",
+        context={
+            "title": "Paldeck Armory Player",
+            "player_id": player_id,
+        },
+    )
 
 @app.get(
     "/api/players/{player_key}",
