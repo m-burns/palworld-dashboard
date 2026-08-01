@@ -876,12 +876,56 @@ async function refreshActivityTimeline() {
     }
 }
 
+function renderAnnouncements(payload) {
+    const list = document.querySelector("#announcement-list");
+    list.replaceChildren();
+    if (!payload.announcements?.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "There are no active announcements.";
+        list.appendChild(empty);
+        return;
+    }
+    for (const announcement of payload.announcements) {
+        const card = document.createElement("article");
+        card.className = announcement.pinned
+            ? "announcement-card announcement-pinned"
+            : "announcement-card";
+        const heading = document.createElement("div");
+        heading.className = "announcement-heading";
+        const title = document.createElement("h3");
+        title.textContent = announcement.title;
+        const date = document.createElement("time");
+        date.dateTime = announcement.published_at;
+        date.textContent = new Date(announcement.published_at).toLocaleString();
+        heading.append(title, date);
+        const message = document.createElement("p");
+        message.textContent = announcement.message;
+        card.append(heading, message);
+        list.appendChild(card);
+    }
+}
+
+async function refreshAnnouncements() {
+    try {
+        const response = await fetch("/api/announcements?limit=10", {
+            headers: {Accept: "application/json"},
+            cache: "no-store",
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        renderAnnouncements(await response.json());
+    } catch (error) {
+        console.error("Announcement refresh failed", error);
+    }
+}
+
 function refreshDashboard() {
     refreshStatus();
     refreshPlayers();
     refreshLevelLeaderboard();
     refreshPlaytimeLeaderboard();
     refreshActivityTimeline();
+    refreshAnnouncements();
 }
 
 refreshDashboard();

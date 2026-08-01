@@ -14,6 +14,7 @@
 - Playtime leaderboard
 - Paldeck Armory and completion leaderboard
 - Activity timeline
+- Server announcements
 - Hall of Fame
 
 ---
@@ -22,7 +23,6 @@
 
 ### Community
 
-- Server announcements
 - Voting
 - MOTD
 

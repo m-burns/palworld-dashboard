@@ -21,6 +21,7 @@ from app.armory_models import (
     ArmoryLeaderboardResponse,
     ArmoryPlayerProfile,
 )
+from app.announcement_models import AnnouncementListResponse
 from app.config import get_settings
 from app.database.session import (
     SessionFactory,
@@ -38,7 +39,9 @@ from app.models import (
 )
 from app.repositories.players import PlayerRepository
 from app.repositories.armory import ArmoryRepository
+from app.repositories.announcements import AnnouncementRepository
 from app.services.armory import ArmoryService
+from app.services.announcements import AnnouncementService
 from app.services.backups import BackupService
 from app.services.infrastructure import InfrastructureService
 from app.services.players import PlayerService
@@ -107,6 +110,10 @@ status_service = StatusService(
 
 player_repository = PlayerRepository()
 armory_repository = ArmoryRepository()
+announcement_service = AnnouncementService(
+    repository=AnnouncementRepository(),
+)
+
 
 player_service = PlayerService(
     palworld_client=palworld_client,
@@ -191,6 +198,17 @@ async def player_history(
     return await player_service.get_player_history(
         session=session,
     )
+@app.get(
+    "/api/announcements",
+    response_model=AnnouncementListResponse,
+)
+async def announcements(
+    limit: int = Query(default=10, ge=1, le=50),
+    session: AsyncSession = Depends(get_session),
+) -> AnnouncementListResponse:
+    return await announcement_service.list_active(session, limit)
+
+
 @app.get(
     "/api/activity",
     response_model=ActivityTimelineResponse,
