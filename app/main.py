@@ -144,6 +144,15 @@ async def home(request: Request) -> HTMLResponse:
         },
     )
 
+@app.get("/hall-of-fame", response_class=HTMLResponse)
+async def hall_of_fame_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request,
+        name="hall-of-fame.html",
+        context={"title": "Hall of Fame"},
+    )
+
+
 
 @app.get("/health")
 async def health() -> dict[str, str]:

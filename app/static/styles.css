@@ -718,6 +718,148 @@ dd {
     }
 
     .armory-rank-progress {
+.hall-hero {
+    text-align: center;
+}
+
+.hall-intro {
+    max-width: 680px;
+    margin: 16px auto 0;
+    color: #a8b3cf;
+    line-height: 1.7;
+}
+
+.hall-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 24px;
+}
+
+.hall-category {
+    display: block;
+}
+
+.hall-category-wide {
+    grid-column: 1 / -1;
+}
+
+.hall-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.hall-heading h2 {
+    margin: 2px 0 0;
+}
+
+.hall-icon {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border: 1px solid rgba(250, 204, 21, 0.28);
+    border-radius: 14px;
+    background: rgba(250, 204, 21, 0.09);
+    color: #facc15;
+    font-size: 1.35rem;
+}
+
+.hall-podium {
+    display: grid;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.hall-entry {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.035);
+    text-decoration: none;
+    transition: border-color 150ms ease, transform 150ms ease;
+}
+
+.hall-entry:hover {
+    transform: translateY(-2px);
+    border-color: rgba(125, 211, 252, 0.35);
+}
+
+.hall-place {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.15);
+    font-weight: 900;
+}
+
+.hall-place-1 .hall-place {
+    color: #422006;
+    background: #facc15;
+}
+
+.hall-place-2 .hall-place {
+    color: #1e293b;
+    background: #cbd5e1;
+}
+
+.hall-place-3 .hall-place {
+    color: #431407;
+    background: #fb923c;
+}
+
+.hall-identity small,
+.hall-identity strong {
+    display: block;
+}
+
+.hall-identity small {
+    margin-bottom: 3px;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hall-record {
+    color: #facc15;
+    text-align: right;
+}
+
+.hall-updated {
+    margin-top: 20px;
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .hall-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hall-category-wide {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .hall-entry {
+        grid-template-columns: 36px 1fr;
+    }
+
+    .hall-record {
+        grid-column: 2;
+        text-align: left;
+    }
+}
         grid-column: 2 / -1;
     }
 }
