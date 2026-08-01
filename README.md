@@ -2,7 +2,7 @@
 
 A lightweight community dashboard and monitoring application for a self-hosted Palworld dedicated server.
 
-This repository contains the web application only. It reads live data from the Palworld REST API, records player activity in SQLite, checks the server's backup directory, and displays host resource usage. The dedicated server itself is deployed separately by the companion `palworld` repository.
+This repository contains the web application only. It reads live data from the Palworld REST API, records player activity in SQLite, reads sanitized backup metadata exported by the host, and displays host resource usage. The dedicated server itself is deployed separately by the companion `palworld` repository.
 
 ## What it provides
 
@@ -33,27 +33,27 @@ Browser
   |
   v
 Palworld Dashboard (FastAPI)
-  |-- Palworld REST API       live server and player data
+  |-- Read-only API gateway   allowlisted live server and player data
   |-- SQLite                  player history and sessions
-  |-- Palworld backup volume  latest-backup status
-  `-- Host mounts             CPU, memory, swap, and disk metrics
+  |-- Sanitized status file   latest-backup age and size only
+  `-- /proc read-only         CPU, memory, and swap metrics
 ```
 
-The Compose configuration joins the existing `palworld_default` Docker network created by the companion server deployment. It also mounts the server backup directory read-only and publishes the dashboard on `127.0.0.1:8000`, making it suitable for use behind a reverse proxy.
+Only the read-only API gateway joins `palworld_default`; the dashboard cannot reach the game-server network directly. The dashboard publishes only on `127.0.0.1:8000` for use behind a reverse proxy. Its root filesystem is read-only, Linux capabilities are dropped, and raw backup archives and the host root are not mounted.
 
 ## Requirements
 
 - Linux host with Docker Engine and the Docker Compose plugin
 - A running Palworld server with its REST API enabled
 - The external Docker network `palworld_default`
-- Read access to `/opt/palworld/palworld/backups`
+- Host-side read access to `/opt/palworld/palworld/backups` for the metadata exporter
 
 ## Configuration
 
 Create `/opt/palworld-dashboard/.env` with the REST API credentials configured for the game server:
 
 ```dotenv
-PALWORLD_API_URL=http://palworld-server:8212
+PALWORLD_API_URL=http://palworld-api-gateway:8080
 PALWORLD_API_USERNAME=admin
 PALWORLD_API_PASSWORD=CHANGE_ME
 ```
@@ -61,18 +61,21 @@ PALWORLD_API_PASSWORD=CHANGE_ME
 Optional settings and their defaults are:
 
 ```dotenv
-BACKUP_DIRECTORY=/palworld-backups
+BACKUP_STATUS_FILE=/app/runtime/backup-status.json
 BACKUP_MAX_AGE_HOURS=36
 DATABASE_URL=sqlite+aiosqlite:////app/data/dashboard.db
+ALLOWED_HOSTS=localhost,127.0.0.1
+ENABLE_API_DOCS=false
 ```
 
-Keep `.env` out of version control. The API URL must be reachable from the dashboard container; when both repositories use their supplied Compose files, `palworld-server` is the game server container name.
+Keep `.env` out of version control. For a public deployment, add the exact DNS name to `ALLOWED_HOSTS`. Compose overrides the API URL to the restricted gateway; do not point the dashboard directly at `palworld-server`.
 
 ## Run with Docker Compose
 
-Start the companion Palworld server first so its Docker network exists, then run:
+Start the companion Palworld server first so its Docker network exists. Export the initial backup metadata, then run:
 
 ```bash
+./scripts/export-backup-status.sh
 docker compose build
 docker compose up -d
 ```
@@ -91,7 +94,7 @@ docker compose up -d --build
 docker compose down
 ```
 
-The SQLite database persists in `./data` on the host. Palworld backups and host filesystem mounts are read-only inside the container.
+The SQLite database persists in `./data`. Run `scripts/export-backup-status.sh` every five minutes from host cron; it exports only backup time and size to `./runtime`.
 
 ## HTTP routes
 
@@ -112,7 +115,7 @@ The SQLite database persists in `./data` on the host. Palworld backups and host 
 | `GET /api/leaderboards/levels` | Level leaderboard (`limit` 1-100) |
 | `GET /api/leaderboards/playtime` | Playtime leaderboard (`limit` 1-100) |
 
-FastAPI's interactive API documentation is available at `/docs` while the application is running.
+FastAPI's interactive API documentation is disabled by default. Set `ENABLE_API_DOCS=true` only for trusted development environments.
 
 ## Development
 

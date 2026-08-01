@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import secrets
 import logging
+from time import monotonic
 
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -18,6 +19,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.clients.palworld import PalworldClient
 from app.armory_models import (
@@ -51,6 +53,7 @@ from app.services.infrastructure import InfrastructureService
 from app.services.players import PlayerService
 from app.services.status import StatusService
 from app.services.voting import VotingService
+from app.security import PublicRequestGuardMiddleware
 from app.voting_models import PollListResponse, VoteRequest, VoteResponse
 
 
@@ -60,11 +63,17 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
+_status_cache: tuple[float, ServerStatus] | None = None
+_player_cache: PlayerListResponse | None = None
+_status_lock = asyncio.Lock()
+_player_lock = asyncio.Lock()
+
 async def player_tracking_loop() -> None:
+    global _player_cache
     while True:
         try:
             async with SessionFactory() as session:
-                await player_service.get_online_players(
+                _player_cache = await player_service.get_online_players(
                     session=session,
                 )
         except Exception:
@@ -104,7 +113,7 @@ palworld_client = PalworldClient(
 infrastructure_service = InfrastructureService()
 
 backup_service = BackupService(
-    directory=settings.backup_directory,
+    status_file=settings.backup_status_file,
     max_age_hours=settings.backup_max_age_hours,
 )
 
@@ -138,7 +147,16 @@ app = FastAPI(
     title="Palworld Dashboard",
     version="0.9.0",
     lifespan=lifespan,
+    docs_url="/docs" if settings.enable_api_docs else None,
+    redoc_url="/redoc" if settings.enable_api_docs else None,
+    openapi_url="/openapi.json" if settings.enable_api_docs else None,
 )
+
+allowed_hosts = [
+    host.strip() for host in settings.allowed_hosts.split(",") if host.strip()
+]
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+app.add_middleware(PublicRequestGuardMiddleware)
 
 app.mount(
     "/static",
@@ -183,7 +201,15 @@ async def health() -> dict[str, str]:
     response_model=ServerStatus,
 )
 async def server_status() -> ServerStatus:
-    return await status_service.get_status()
+    global _status_cache
+    now = monotonic()
+    if _status_cache is not None and now - _status_cache[0] < 10:
+        return _status_cache[1]
+    async with _status_lock:
+        now = monotonic()
+        if _status_cache is None or now - _status_cache[0] >= 10:
+            _status_cache = (now, await status_service.get_status())
+        return _status_cache[1]
 
 
 @app.get(
@@ -193,9 +219,15 @@ async def server_status() -> ServerStatus:
 async def online_players(
     session: AsyncSession = Depends(get_session),
 ) -> PlayerListResponse:
-    return await player_service.get_online_players(
-        session=session,
-    )
+    global _player_cache
+    if _player_cache is not None:
+        return _player_cache
+    async with _player_lock:
+        if _player_cache is None:
+            _player_cache = await player_service.get_online_players(
+                session=session,
+            )
+        return _player_cache
 
 
 @app.get(
@@ -415,6 +447,7 @@ async def cast_vote(
             voter_token,
             max_age=31_536_000,
             httponly=True,
+            secure=request.url.scheme == "https",
             samesite="lax",
         )
 
