@@ -1,0 +1,7 @@
+{% set path = request.url.path %}
+<nav class="site-nav" aria-label="Primary navigation">
+    <a href="/" class="{{ 'active' if path == '/' else '' }}">Overview</a>
+    <a href="/community" class="{{ 'active' if path == '/community' or path == '/hall-of-fame' else '' }}">Community</a>
+    <a href="/players" class="{{ 'active' if path == '/players' or path.startswith('/players/') else '' }}">Players</a>
+    <a href="/armory" class="{{ 'active' if path.startswith('/armory') else '' }}">Armory</a>
+</nav>

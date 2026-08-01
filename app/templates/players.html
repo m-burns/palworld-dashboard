@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/styles.css?v=20260801-layout2">
+</head>
+<body data-page="players">
+    <main class="dashboard">
+        {% include "site-nav.html" %}
+        <header class="hero section-hero">
+            <p class="eyebrow">PLAYERS</p>
+            <h1>Adventurer records</h1>
+            <p class="muted">Live players, recent sessions, and server leaderboards.</p>
+        </header>
+        <div class="section-grid">
+            <section class="panel player-panel">
+                <div class="panel-heading"><div><p class="eyebrow">ONLINE</p><h2>Current adventurers</h2></div><span id="online-player-total" class="player-total">—</span></div>
+                <div id="online-player-list" class="player-list"><p class="muted">Loading players…</p></div>
+            </section>
+            <section class="panel leaderboard-panel">
+                <div class="panel-heading"><div><p class="eyebrow">LEADERBOARD</p><h2>Highest level</h2></div></div>
+                <div id="level-leaderboard" class="leaderboard-list"><p class="muted">Loading leaderboard…</p></div>
+            </section>
+            <section class="panel leaderboard-panel">
+                <div class="panel-heading"><div><p class="eyebrow">LEADERBOARD</p><h2>Most playtime</h2></div></div>
+                <div id="playtime-leaderboard" class="leaderboard-list"><p class="muted">Loading playtime…</p></div>
+            </section>
+            <section class="panel activity-panel section-wide">
+                <div class="panel-heading"><div><p class="eyebrow">SERVER ACTIVITY</p><h2>Recent adventures</h2></div><span class="leaderboard-badge">Latest 30</span></div>
+                <div id="activity-timeline" class="activity-list"><p class="muted">Loading recent activity…</p></div>
+            </section>
+        </div>
+    </main>
+    <script src="/static/app.js?v=20260801-layout2"></script>
+</body>
+</html>

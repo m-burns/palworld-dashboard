@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/styles.css?v=20260801-layout2">
+</head>
+<body data-page="community">
+    <main class="dashboard">
+        {% include "site-nav.html" %}
+        <header class="hero section-hero">
+            <p class="eyebrow">COMMUNITY</p>
+            <h1>Server community</h1>
+            <p class="muted">News, decisions, and the adventurers setting server records.</p>
+            <a class="primary-link" href="/hall-of-fame">Visit the Hall of Fame →</a>
+        </header>
+        <div class="section-grid">
+            <section class="panel announcement-panel">
+                <div class="panel-heading"><div><p class="eyebrow">NEWS</p><h2>Announcements</h2></div></div>
+                <div id="announcement-list" class="announcement-list"><p class="muted">Loading announcements…</p></div>
+            </section>
+            <section class="panel voting-panel">
+                <div class="panel-heading"><div><p class="eyebrow">VOTING</p><h2>Active polls</h2></div></div>
+                <div id="poll-list" class="poll-list"><p class="muted">Loading active polls…</p></div>
+            </section>
+        </div>
+    </main>
+    <script src="/static/app.js?v=20260801-layout2"></script>
+</body>
+</html>
