@@ -28,6 +28,7 @@ from app.database.session import (
     get_session,
 )
 from app.models import (
+    ActivityTimelineResponse,
     LevelLeaderboardResponse,
     PlayerHistoryResponse,
     PlayerListResponse,
@@ -181,6 +182,24 @@ async def player_history(
     return await player_service.get_player_history(
         session=session,
     )
+@app.get(
+    "/api/activity",
+    response_model=ActivityTimelineResponse,
+)
+async def activity_timeline(
+    limit: int = Query(
+        default=30,
+        ge=1,
+        le=100,
+    ),
+    session: AsyncSession = Depends(get_session),
+) -> ActivityTimelineResponse:
+    return await player_service.get_activity_timeline(
+        session=session,
+        limit=limit,
+    )
+
+
 
 @app.get(
     "/api/leaderboards/levels",

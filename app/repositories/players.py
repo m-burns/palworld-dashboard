@@ -9,6 +9,7 @@ from app.database.models import (
 )
 from app.models import (
     HistoricalPlayer,
+    ActivityEvent,
     LevelLeaderboardEntry,
     PlayerProfile,
     PlaytimeLeaderboardEntry,
@@ -17,6 +18,59 @@ from app.models import (
 
 
 class PlayerRepository:
+    async def get_activity_timeline(
+        self,
+        session: AsyncSession,
+        limit: int = 30,
+    ) -> list[ActivityEvent]:
+        started_result = await session.execute(
+            select(PlayerSession, PlayerRecord)
+            .join(
+                PlayerRecord,
+                PlayerRecord.id == PlayerSession.player_id,
+            )
+            .order_by(PlayerSession.started_at.desc())
+            .limit(limit)
+        )
+        ended_result = await session.execute(
+            select(PlayerSession, PlayerRecord)
+            .join(
+                PlayerRecord,
+                PlayerRecord.id == PlayerSession.player_id,
+            )
+            .where(PlayerSession.ended_at.is_not(None))
+            .order_by(PlayerSession.ended_at.desc())
+            .limit(limit)
+        )
+
+        events = [
+            ActivityEvent(
+                event_type="joined",
+                occurred_at=self._as_utc(tracked_session.started_at),
+                player_key=player.player_key,
+                player_name=player.display_name,
+            )
+            for tracked_session, player in started_result.all()
+        ]
+        events.extend(
+            ActivityEvent(
+                event_type="left",
+                occurred_at=self._as_utc(tracked_session.ended_at),
+                player_key=player.player_key,
+                player_name=player.display_name,
+                session_duration_seconds=(
+                    tracked_session.duration_seconds or 0
+                ),
+            )
+            for tracked_session, player in ended_result.all()
+            if tracked_session.ended_at is not None
+        )
+        events.sort(
+            key=lambda event: event.occurred_at,
+            reverse=True,
+        )
+        return events[:limit]
+
     async def sync_online_players(
         self,
         session: AsyncSession,
