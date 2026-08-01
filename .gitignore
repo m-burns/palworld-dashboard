@@ -1,4 +1,6 @@
 .env
+.armory-id-secret
+armory-import.log
 data/
 __pycache__/
 *.pyc

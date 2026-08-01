@@ -806,11 +806,82 @@ async function refreshPlaytimeLeaderboard() {
     }
 }
 
+function formatActivityTime(value) {
+    const occurredAt = new Date(value);
+    const elapsedSeconds = Math.max(
+        0,
+        Math.floor((Date.now() - occurredAt.getTime()) / 1000),
+    );
+
+    if (elapsedSeconds < 60) return "Just now";
+    if (elapsedSeconds < 3600) {
+        return `${Math.floor(elapsedSeconds / 60)}m ago`;
+    }
+    if (elapsedSeconds < 86400) {
+        return `${Math.floor(elapsedSeconds / 3600)}h ago`;
+    }
+    return occurredAt.toLocaleString();
+}
+
+function renderActivityTimeline(payload) {
+    const list = document.querySelector("#activity-timeline");
+    list.replaceChildren();
+
+    if (!payload.events?.length) {
+        const message = document.createElement("p");
+        message.className = "muted";
+        message.textContent = "No player activity has been recorded yet.";
+        list.appendChild(message);
+        return;
+    }
+
+    for (const event of payload.events) {
+        const row = document.createElement("article");
+        row.className = `activity-row activity-${event.event_type}`;
+        const marker = document.createElement("span");
+        marker.className = "activity-marker";
+        marker.setAttribute("aria-hidden", "true");
+        const detail = document.createElement("div");
+        detail.className = "activity-detail";
+        const player = document.createElement("a");
+        player.className = "player-profile-link";
+        player.href = `/players/${encodeURIComponent(event.player_key)}`;
+        player.textContent = event.player_name;
+        const action = document.createElement("span");
+        action.textContent = event.event_type === "joined"
+            ? " joined the server"
+            : " left the server";
+        const metadata = document.createElement("small");
+        metadata.className = "activity-metadata";
+        const duration = event.event_type === "left"
+            ? ` · Played ${formatPlaytime(event.session_duration_seconds)}`
+            : "";
+        metadata.textContent = `${formatActivityTime(event.occurred_at)}${duration}`;
+        detail.append(player, action, metadata);
+        row.append(marker, detail);
+        list.appendChild(row);
+    }
+}
+
+async function refreshActivityTimeline() {
+    try {
+        const response = await fetch("/api/activity?limit=30", {
+            headers: {Accept: "application/json"},
+            cache: "no-store",
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        renderActivityTimeline(await response.json());
+    } catch (error) {
+        console.error("Activity timeline refresh failed", error);
+    }
+}
+
 function refreshDashboard() {
     refreshStatus();
     refreshPlayers();
     refreshLevelLeaderboard();
     refreshPlaytimeLeaderboard();
+    refreshActivityTimeline();
 }
 
 refreshDashboard();

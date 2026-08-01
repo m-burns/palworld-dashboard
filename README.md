@@ -103,6 +103,7 @@ The SQLite database persists in `./data` on the host. Palworld backups and host 
 | `GET /api/status` | Server, infrastructure, and backup status |
 | `GET /api/players` | Current online players |
 | `GET /api/players/history` | Recorded player history |
+| `GET /api/activity` | Recent player join and leave activity |
 | `GET /api/players/{player_key}` | Player profile data |
 | `GET /api/leaderboards/levels` | Level leaderboard (`limit` 1-100) |
 | `GET /api/leaderboards/playtime` | Playtime leaderboard (`limit` 1-100) |

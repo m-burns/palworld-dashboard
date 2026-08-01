@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -114,3 +115,16 @@ class PlayerProfile(BaseModel):
     completed_session_count: int
     longest_session_seconds: int
     average_session_seconds: int
+
+
+class ActivityEvent(BaseModel):
+    event_type: Literal["joined", "left"]
+    occurred_at: datetime
+    player_key: str
+    player_name: str
+    session_duration_seconds: int | None = None
+
+
+class ActivityTimelineResponse(BaseModel):
+    generated_at: datetime
+    events: list[ActivityEvent]

@@ -13,11 +13,6 @@
 - Level leaderboard
 - Playtime leaderboard
 - Paldeck Armory and completion leaderboard
-
----
-
-## In Progress
-
 - Activity timeline
 
 ---

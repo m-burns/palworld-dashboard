@@ -15,6 +15,7 @@ from app.models import (
 from app.repositories.players import PlayerRepository
 
 from app.models import (
+    ActivityTimelineResponse,
     LevelLeaderboardResponse,
     PlayerHistoryResponse,
     PlayerListResponse,
@@ -74,6 +75,20 @@ class PlayerService:
             checked_at=checked_at,
             available=True,
             players=players,
+        )
+
+    async def get_activity_timeline(
+        self,
+        session: AsyncSession,
+        limit: int = 30,
+    ) -> ActivityTimelineResponse:
+        events = await self._player_repository.get_activity_timeline(
+            session=session,
+            limit=limit,
+        )
+        return ActivityTimelineResponse(
+            generated_at=datetime.now(UTC),
+            events=events,
         )
 
     async def get_player_history(
