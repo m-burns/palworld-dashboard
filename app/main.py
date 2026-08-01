@@ -1,4 +1,6 @@
 import asyncio
+import hashlib
+import secrets
 import logging
 
 from contextlib import asynccontextmanager
@@ -10,6 +12,7 @@ from fastapi import (
     HTTPException,
     Query,
     Request,
+    Response,
 )
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -40,12 +43,15 @@ from app.models import (
 from app.repositories.players import PlayerRepository
 from app.repositories.armory import ArmoryRepository
 from app.repositories.announcements import AnnouncementRepository
+from app.repositories.voting import DuplicateVoteError, InvalidVoteError, VotingRepository
 from app.services.armory import ArmoryService
 from app.services.announcements import AnnouncementService
 from app.services.backups import BackupService
 from app.services.infrastructure import InfrastructureService
 from app.services.players import PlayerService
 from app.services.status import StatusService
+from app.services.voting import VotingService
+from app.voting_models import PollListResponse, VoteRequest, VoteResponse
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -113,6 +119,10 @@ armory_repository = ArmoryRepository()
 announcement_service = AnnouncementService(
     repository=AnnouncementRepository(),
 )
+voting_service = VotingService(
+    repository=VotingRepository(),
+)
+
 
 
 player_service = PlayerService(
@@ -364,3 +374,62 @@ async def player_profile_page(
             "player_key": player_key,
         },
     )
+
+
+@app.get(
+    "/api/polls",
+    response_model=PollListResponse,
+)
+async def active_polls(
+    limit: int = Query(default=5, ge=1, le=20),
+    session: AsyncSession = Depends(get_session),
+) -> PollListResponse:
+    return await voting_service.list_active(session, limit)
+
+
+@app.post(
+    "/api/polls/{poll_id}/vote",
+    response_model=VoteResponse,
+)
+async def cast_vote(
+    poll_id: int,
+    payload: VoteRequest,
+    request: Request,
+    response: Response,
+    session: AsyncSession = Depends(get_session),
+) -> VoteResponse:
+    voter_token = request.cookies.get("palworld_voter")
+    try:
+        valid_token = (
+            voter_token is not None
+            and len(voter_token) == 64
+            and len(bytes.fromhex(voter_token)) == 32
+        )
+    except ValueError:
+        valid_token = False
+
+    if not valid_token:
+        voter_token = secrets.token_hex(32)
+        response.set_cookie(
+            "palworld_voter",
+            voter_token,
+            max_age=31_536_000,
+            httponly=True,
+            samesite="lax",
+        )
+
+    assert voter_token is not None
+    voter_hash = hashlib.sha256(voter_token.encode()).hexdigest()
+    try:
+        poll = await voting_service.vote(
+            session,
+            poll_id,
+            payload.option_id,
+            voter_hash,
+        )
+    except DuplicateVoteError as exc:
+        raise HTTPException(status_code=409, detail="Already voted") from exc
+    except InvalidVoteError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return VoteResponse(accepted=True, poll=poll)

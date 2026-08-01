@@ -106,6 +106,8 @@ The SQLite database persists in `./data` on the host. Palworld backups and host 
 | `GET /api/players/history` | Recorded player history |
 | `GET /api/activity` | Recent player join and leave activity |
 | `GET /api/announcements` | Active server announcements |
+| `GET /api/polls` | Active community polls and results |
+| `POST /api/polls/{poll_id}/vote` | Cast an anonymous browser vote |
 | `GET /api/players/{player_key}` | Player profile data |
 | `GET /api/leaderboards/levels` | Level leaderboard (`limit` 1-100) |
 | `GET /api/leaderboards/playtime` | Playtime leaderboard (`limit` 1-100) |
@@ -136,3 +138,4 @@ See the project documentation for more detail:
 - [AI development guidelines](docs/AI_GUIDELINES.md)
 - [Paldeck snapshot import](docs/PALDECK_IMPORT.md)
 - [Server announcements](docs/ANNOUNCEMENTS.md)
+- [Community voting](docs/VOTING.md)
