@@ -14,7 +14,7 @@ class InfrastructureService:
 
         self._host_root = os.getenv(
             "HOST_ROOT_PATH",
-            "/host/root",
+            "/app/data",
         )
 
     def get_metrics(self) -> InfrastructureMetrics:

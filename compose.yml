@@ -5,30 +5,71 @@ services:
 
     container_name: palworld-dashboard
     restart: unless-stopped
+    depends_on:
+      - palworld-api-gateway
 
     env_file:
       - .env
 
     environment:
+      PALWORLD_API_URL: http://palworld-api-gateway:8080
       PSUTIL_PROCFS_PATH: /host/proc
-      HOST_ROOT_PATH: /host/root
-      BACKUP_DIRECTORY: /palworld-backups
+      HOST_ROOT_PATH: /app/data
+      BACKUP_STATUS_FILE: /app/runtime/backup-status.json
       BACKUP_MAX_AGE_HOURS: 36
 
     ports:
       - "127.0.0.1:8000:8000"
 
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+
     volumes:
       - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/host/root:ro
-      - /opt/palworld/palworld/backups:/palworld-backups:ro
+      - ./runtime:/app/runtime:ro
       - ./data:/app/data
 
     networks:
+      - frontend-secure
+      - dashboard-private
+
+  palworld-api-gateway:
+    image: nginxinc/nginx-unprivileged:1.29-alpine
+    container_name: palworld-api-gateway
+    restart: unless-stopped
+
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+      - /var/cache/nginx:rw,noexec,nosuid,size=16m
+      - /var/run:rw,noexec,nosuid,size=1m
+
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+    networks:
+      - dashboard-private
       - palworld-existing
 
 networks:
+  frontend-secure:
+    ipam:
+      config:
+        - subnet: 172.30.250.0/24
+          gateway: 172.30.250.1
+  dashboard-private:
+    internal: true
   palworld-existing:
     external: true
     name: palworld_default

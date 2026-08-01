@@ -1,7 +1,9 @@
 .env
 .armory-id-secret
 armory-import.log
+backup-status-export.log
 data/
+runtime/*.json
 __pycache__/
 *.pyc
 .venv/
