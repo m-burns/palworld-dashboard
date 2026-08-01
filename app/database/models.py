@@ -180,3 +180,19 @@ class ArmorySpeciesSnapshot(Base):
     discovered: Mapped[bool] = mapped_column(Boolean, nullable=False)
     counts_toward_completion: Mapped[bool] = mapped_column(Boolean, nullable=False)
     catalog_status: Mapped[str] = mapped_column(String(16), nullable=False)
+
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(120), nullable=False)
+    message: Mapped[str] = mapped_column(String(2000), nullable=False)
+    published_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    pinned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
