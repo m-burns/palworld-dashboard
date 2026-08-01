@@ -196,3 +196,47 @@ class Announcement(Base):
     )
     pinned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class CommunityPoll(Base):
+    __tablename__ = "community_polls"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    question: Mapped[str] = mapped_column(String(300), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    closes_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class PollOption(Base):
+    __tablename__ = "poll_options"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    poll_id: Mapped[int] = mapped_column(
+        ForeignKey("community_polls.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    label: Mapped[str] = mapped_column(String(200), nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class PollVote(Base):
+    __tablename__ = "poll_votes"
+    __table_args__ = (UniqueConstraint("poll_id", "voter_hash"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    poll_id: Mapped[int] = mapped_column(
+        ForeignKey("community_polls.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    option_id: Mapped[int] = mapped_column(
+        ForeignKey("poll_options.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    voter_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )

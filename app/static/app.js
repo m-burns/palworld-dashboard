@@ -919,6 +919,82 @@ async function refreshAnnouncements() {
     }
 }
 
+function renderPolls(payload) {
+    const list = document.querySelector("#poll-list");
+    list.replaceChildren();
+    if (!payload.polls?.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "There are no active polls.";
+        list.appendChild(empty);
+        return;
+    }
+
+    for (const poll of payload.polls) {
+        const card = document.createElement("article");
+        card.className = "poll-card";
+        const question = document.createElement("h3");
+        question.textContent = poll.question;
+        const options = document.createElement("div");
+        options.className = "poll-options";
+
+        for (const option of poll.options) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "poll-option";
+            const percent = poll.total_votes
+                ? Math.round((option.votes / poll.total_votes) * 100)
+                : 0;
+            button.textContent = `${option.label} · ${option.votes} (${percent}%)`;
+            button.addEventListener("click", () => castPollVote(
+                poll.id,
+                option.id,
+                card,
+            ));
+            options.appendChild(button);
+        }
+
+        const total = document.createElement("small");
+        total.className = "poll-total";
+        total.textContent = `${poll.total_votes} vote${poll.total_votes === 1 ? "" : "s"}`;
+        card.append(question, options, total);
+        list.appendChild(card);
+    }
+}
+
+async function castPollVote(pollId, optionId, card) {
+    const buttons = card.querySelectorAll("button");
+    buttons.forEach((button) => { button.disabled = true; });
+    try {
+        const response = await fetch(`/api/polls/${pollId}/vote`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({option_id: optionId}),
+        });
+        if (!response.ok) {
+            const payload = await response.json();
+            throw new Error(payload.detail || `HTTP ${response.status}`);
+        }
+        await refreshPolls();
+    } catch (error) {
+        buttons.forEach((button) => { button.disabled = false; });
+        window.alert(error.message);
+    }
+}
+
+async function refreshPolls() {
+    try {
+        const response = await fetch("/api/polls?limit=5", {
+            headers: {Accept: "application/json"},
+            cache: "no-store",
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        renderPolls(await response.json());
+    } catch (error) {
+        console.error("Poll refresh failed", error);
+    }
+}
+
 function refreshDashboard() {
     refreshStatus();
     refreshPlayers();
@@ -926,6 +1002,7 @@ function refreshDashboard() {
     refreshPlaytimeLeaderboard();
     refreshActivityTimeline();
     refreshAnnouncements();
+    refreshPolls();
 }
 
 refreshDashboard();

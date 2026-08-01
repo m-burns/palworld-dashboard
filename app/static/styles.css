@@ -927,3 +927,34 @@ dd {
         gap: 5px;
     }
 }
+
+.voting-panel { display: block; }
+.poll-list { display: grid; gap: 14px; margin-top: 20px; }
+.poll-card {
+    padding: 18px;
+    border: 1px solid rgba(125, 211, 252, 0.16);
+    border-radius: 14px;
+    background: rgba(14, 165, 233, 0.05);
+}
+.poll-card h3 { margin: 0 0 14px; }
+.poll-options { display: grid; gap: 8px; }
+.poll-option {
+    padding: 12px 14px;
+    border: 1px solid rgba(125, 211, 252, 0.2);
+    border-radius: 10px;
+    color: #e0f2fe;
+    background: rgba(14, 165, 233, 0.08);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.poll-option:hover:not(:disabled) {
+    border-color: #7dd3fc;
+    background: rgba(14, 165, 233, 0.16);
+}
+.poll-option:disabled { cursor: wait; opacity: 0.6; }
+.poll-total {
+    display: block;
+    margin-top: 12px;
+    color: #94a3b8;
+}

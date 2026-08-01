@@ -16,6 +16,7 @@
 - Activity timeline
 - Server announcements
 - Hall of Fame
+- Voting
 
 ---
 
@@ -23,7 +24,6 @@
 
 ### Community
 
-- Voting
 - MOTD
 
 ### Statistics
