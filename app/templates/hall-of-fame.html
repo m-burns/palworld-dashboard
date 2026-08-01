@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <main class="dashboard hall-page">
+        <nav class="profile-navigation">
+            <a class="back-link" href="/">← Back to dashboard</a>
+        </nav>
+
+        <header class="hero hall-hero">
+            <p class="eyebrow">COMMUNITY LEGENDS</p>
+            <h1>Hall of Fame</h1>
+            <p class="hall-intro">
+                Celebrating the adventurers leading the server records.
+                Paldeck identities remain separate from live server profiles.
+            </p>
+        </header>
+
+        <section class="hall-grid">
+            <article class="panel hall-category">
+                <div class="hall-heading">
+                    <span class="hall-icon" aria-hidden="true">⚔</span>
+                    <div>
+                        <p class="eyebrow">POWER</p>
+                        <h2>Highest level</h2>
+                    </div>
+                </div>
+                <div id="hall-level" class="hall-podium">
+                    <p class="muted">Loading champions…</p>
+                </div>
+            </article>
+
+            <article class="panel hall-category">
+                <div class="hall-heading">
+                    <span class="hall-icon" aria-hidden="true">⌛</span>
+                    <div>
+                        <p class="eyebrow">DEDICATION</p>
+                        <h2>Most playtime</h2>
+                    </div>
+                </div>
+                <div id="hall-playtime" class="hall-podium">
+                    <p class="muted">Loading veterans…</p>
+                </div>
+            </article>
+
+            <article class="panel hall-category hall-category-wide">
+                <div class="hall-heading">
+                    <span class="hall-icon" aria-hidden="true">✦</span>
+                    <div>
+                        <p class="eyebrow">PALDECK MASTERY</p>
+                        <h2>Greatest collectors</h2>
+                    </div>
+                </div>
+                <div id="hall-armory" class="hall-podium">
+                    <p class="muted">Loading collectors…</p>
+                </div>
+            </article>
+        </section>
+
+        <p id="hall-updated" class="hall-updated muted"></p>
+    </main>
+    <script src="/static/hall-of-fame.js"></script>
+</body>
+</html>
