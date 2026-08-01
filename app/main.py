@@ -433,3 +433,21 @@ async def cast_vote(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     return VoteResponse(accepted=True, poll=poll)
+
+
+@app.get("/community", response_class=HTMLResponse)
+async def community_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request,
+        name="community.html",
+        context={"title": "Community"},
+    )
+
+
+@app.get("/players", response_class=HTMLResponse)
+async def players_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request,
+        name="players.html",
+        context={"title": "Players"},
+    )

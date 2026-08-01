@@ -1,4 +1,6 @@
 const REFRESH_INTERVAL_MS = 15_000;
+const IS_PLAYERS_PAGE = document.body.dataset.page === "players";
+const IS_COMMUNITY_PAGE = document.body.dataset.page === "community";
 
 function formatUptime(totalSeconds) {
     if (
@@ -401,6 +403,7 @@ function renderLevelLeaderboard(payload) {
 }
 
 async function refreshStatus() {
+    if (!document.querySelector("#status-dot")) return;
     const lastChecked =
         document.querySelector(
             "#last-checked",
@@ -579,6 +582,7 @@ async function refreshStatus() {
 }
 
 async function refreshPlayers() {
+    if (!document.querySelector("#online-player-list")) return;
     try {
         const response = await fetch(
             "/api/players",
@@ -615,9 +619,10 @@ async function refreshPlayers() {
 }
 
 async function refreshLevelLeaderboard() {
+    if (!document.querySelector("#level-leaderboard")) return;
     try {
         const response = await fetch(
-            "/api/leaderboards/levels?limit=10",
+            `/api/leaderboards/levels?limit=${IS_PLAYERS_PAGE ? 10 : 3}`,
             {
                 headers: {
                     Accept: "application/json",
@@ -780,9 +785,10 @@ function renderPlaytimeLeaderboard(payload) {
 }
 
 async function refreshPlaytimeLeaderboard() {
+    if (!document.querySelector("#playtime-leaderboard")) return;
     try {
         const response = await fetch(
-            "/api/leaderboards/playtime?limit=10",
+            `/api/leaderboards/playtime?limit=${IS_PLAYERS_PAGE ? 10 : 3}`,
             {
                 headers: {
                     Accept: "application/json",
@@ -864,8 +870,9 @@ function renderActivityTimeline(payload) {
 }
 
 async function refreshActivityTimeline() {
+    if (!document.querySelector("#activity-timeline")) return;
     try {
-        const response = await fetch("/api/activity?limit=30", {
+        const response = await fetch(`/api/activity?limit=${IS_PLAYERS_PAGE ? 30 : 5}`, {
             headers: {Accept: "application/json"},
             cache: "no-store",
         });
@@ -907,8 +914,9 @@ function renderAnnouncements(payload) {
 }
 
 async function refreshAnnouncements() {
+    if (!document.querySelector("#announcement-list")) return;
     try {
-        const response = await fetch("/api/announcements?limit=10", {
+        const response = await fetch(`/api/announcements?limit=${IS_COMMUNITY_PAGE ? 10 : 1}`, {
             headers: {Accept: "application/json"},
             cache: "no-store",
         });
@@ -983,8 +991,9 @@ async function castPollVote(pollId, optionId, card) {
 }
 
 async function refreshPolls() {
+    if (!document.querySelector("#poll-list")) return;
     try {
-        const response = await fetch("/api/polls?limit=5", {
+        const response = await fetch(`/api/polls?limit=${IS_COMMUNITY_PAGE ? 5 : 1}`, {
             headers: {Accept: "application/json"},
             cache: "no-store",
         });

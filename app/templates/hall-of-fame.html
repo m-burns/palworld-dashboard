@@ -4,10 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }}</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css?v=20260801-layout2">
 </head>
 <body>
     <main class="dashboard hall-page">
+        {% include "site-nav.html" %}
         <nav class="profile-navigation">
             <a class="back-link" href="/">← Back to dashboard</a>
         </nav>
